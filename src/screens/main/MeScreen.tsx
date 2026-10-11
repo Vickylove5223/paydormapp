@@ -150,13 +150,10 @@ function SecurityIcon() {
   );
 }
 
-function DirectDebitIcon() {
+function RateIcon() {
   return (
     <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
-      <Path d="M4 12a8 8 0 0 1 14.4-4.8" stroke={Colors.violet} strokeWidth="2" strokeLinecap="round" />
-      <Path d="M20 12a8 8 0 0 1-14.4 4.8" stroke={Colors.green} strokeWidth="2" strokeLinecap="round" />
-      <Path d="M18 4l.5 3.5L22 8" stroke={Colors.violet} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-      <Path d="M6 20l-.5-3.5L2 16" stroke={Colors.green} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      <Path d="M12 2l2.9 5.8L22 9l-5 4.9 1.2 6.9L12 17.8l-6.2 3 1.2-6.9L2 9l7.1-1.2z" fill={Colors.violet} stroke="#0C1822" strokeWidth="1.6" strokeLinejoin="round" />
     </Svg>
   );
 }
@@ -185,22 +182,22 @@ function LogOutIcon() {
 interface ShortcutCard {
   label: string;
   sublabel: string;
-  icon: () => React.ReactElement;
+  icon: (props?: any) => React.ReactElement;
   route: string;
 }
 
 interface MenuRow {
   label: string;
-  icon: () => React.ReactElement;
+  icon: (props?: any) => React.ReactElement;
   route: string;
   destructive?: boolean;
 }
 
 const SHORTCUT_CARDS: ShortcutCard[] = [
-  { label: 'Gate pass', sublabel: 'Coming soon', icon: GatePassIcon, route: 'GatePass' },
+  { label: 'Wallet', sublabel: 'Balance & top up', icon: WalletIcon, route: 'Wallet' },
   { label: 'My payments', sublabel: 'History', icon: PaymentsIcon, route: 'MyPayments' },
   { label: 'Co-partner', sublabel: 'Housemates', icon: CoPartnerIcon, route: 'CoPartner' },
-  { label: 'Wallet', sublabel: 'Balance & top up', icon: WalletIcon, route: 'Wallet' },
+  { label: 'Gate pass', sublabel: 'Coming soon', icon: GatePassIcon, route: 'GatePass' },
 ];
 
 const MENU_ROWS: MenuRow[] = [
@@ -209,7 +206,7 @@ const MENU_ROWS: MenuRow[] = [
   { label: 'Payout account', icon: PayoutIcon, route: 'Profile' },
   { label: 'Notifications', icon: NotificationsIcon, route: 'Notifications' },
   { label: 'Security', icon: SecurityIcon, route: 'Security' },
-  { label: 'Direct debit', icon: DirectDebitIcon, route: 'Wallet' },
+  { label: 'Rate PayDorm', icon: RateIcon, route: 'HelpSupport' },
   { label: 'Help & support', icon: HelpIcon, route: 'HelpSupport' },
   { label: 'Log out', icon: LogOutIcon, route: 'logout', destructive: true },
 ];
@@ -260,7 +257,8 @@ export function MeScreen() {
             <Text style={styles.name}>{fullName}</Text>
             <Text style={styles.house}>Lekki Gardens Estate · Flat 4B</Text>
             {user?.residentId && (
-              <View style={styles.residentBadge}>
+              <View style={styles.residentWrap}>
+                <Text style={styles.residentLabel}>Resident ID</Text>
                 <Text style={styles.residentId}>#{user.residentId}</Text>
               </View>
             )}
@@ -341,17 +339,9 @@ const styles = StyleSheet.create({
   profileInfo: { flex: 1, gap: 3 },
   name: { ...Typography.title, color: Colors.ink },
   house: { ...Typography.caption, color: Colors.textSecondary },
-  residentBadge: {
-    alignSelf: 'flex-start',
-    backgroundColor: Colors.white,
-    borderWidth: 1.5,
-    borderColor: Colors.ink,
-    borderRadius: 99,
-    paddingHorizontal: 10,
-    paddingVertical: 2,
-    marginTop: 4,
-  },
-  residentId: { ...Typography.caption, color: Colors.ink, fontFamily: 'DMSans_700Bold' },
+  residentWrap: { marginTop: 4, gap: 1 },
+  residentLabel: { ...Typography.captionSmall, color: Colors.textMuted },
+  residentId: { ...Typography.label, color: Colors.ink },
   cards: {
     flexDirection: 'row',
     flexWrap: 'wrap',

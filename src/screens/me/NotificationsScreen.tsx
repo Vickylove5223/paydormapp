@@ -8,16 +8,63 @@ import {
   RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigation } from '@react-navigation/native';
 import { Colors, Typography, Layout, Radius } from '@/theme';
-import { api } from '@/api/client';
-import { AppNotification } from '@/types';
-import { timeAgo, relativeDate } from '@/utils/date';
+import { timeAgo } from '@/utils/date';
 import { ScreenHeader } from '@/components/common/ScreenHeader';
-import { CardSkeleton } from '@/components/common/SkeletonLoader';
-import { EmptyState } from '@/components/common/EmptyState';
 import { useAppStore } from '@/store/app';
+
+interface MockNotif {
+  id: string;
+  type: string;
+  title: string;
+  body: string;
+  createdAt: string;
+  readAt?: string | null;
+}
+
+const MOCK_NOTIFICATIONS: MockNotif[] = [
+  {
+    id: 'n1', type: 'payment_received', title: 'Payment received',
+    body: 'Tolu Adeyemi paid ₦12,000 for August EKEDC.',
+    createdAt: '2026-10-11T08:22:00Z', readAt: null,
+  },
+  {
+    id: 'n2', type: 'bill_due_today', title: 'Bill due today',
+    body: 'October Service Charge (₦5,000) is due today. Remind your tenants.',
+    createdAt: '2026-10-11T07:00:00Z', readAt: null,
+  },
+  {
+    id: 'n3', type: 'payment_received', title: 'Payment received',
+    body: 'Kemi Okafor paid ₦5,000 for October Service Charge.',
+    createdAt: '2026-10-10T16:45:00Z', readAt: '2026-10-10T17:00:00Z',
+  },
+  {
+    id: 'n4', type: 'copartner_invited', title: 'Co-partner invite sent',
+    body: 'Ngozi Eze has been invited to co-manage Lekki Gardens Estate.',
+    createdAt: '2026-10-10T12:00:00Z', readAt: '2026-10-10T12:05:00Z',
+  },
+  {
+    id: 'n5', type: 'wallet_topup', title: 'Wallet funded',
+    body: 'Your wallet has been credited with ₦5,000 via Providus Bank.',
+    createdAt: '2026-10-10T14:00:00Z', readAt: '2026-10-10T14:01:00Z',
+  },
+  {
+    id: 'n6', type: 'bill_due_soon', title: 'Bill due in 3 days',
+    body: 'Water Supply (₦3,500) is due on 15 Oct. 8 of 12 households have not paid.',
+    createdAt: '2026-10-08T09:00:00Z', readAt: '2026-10-08T09:30:00Z',
+  },
+  {
+    id: 'n7', type: 'payment_received', title: 'Payment received',
+    body: 'Femi Adekunle paid ₦12,000 for August EKEDC.',
+    createdAt: '2026-10-07T11:30:00Z', readAt: '2026-10-07T12:00:00Z',
+  },
+  {
+    id: 'n8', type: 'new_bill_added', title: 'New bill created',
+    body: 'You added October Service Charge for all 12 households.',
+    createdAt: '2026-10-05T10:00:00Z', readAt: '2026-10-05T10:00:00Z',
+  },
+];
 
 const NOTIF_ICONS: Record<string, string> = {
   bill_due_soon: '🔔',
@@ -37,40 +84,16 @@ const NOTIF_ICONS: Record<string, string> = {
 export function NotificationsScreen() {
   const navigation = useNavigation<any>();
   const clearUnread = useAppStore((s) => s.clearUnread);
-  const queryClient = useQueryClient();
-
-  const { data, isLoading, refetch, isRefetching } = useQuery({
-    queryKey: ['notifications'],
-    queryFn: () => api.get<{ notifications: AppNotification[] }>('/notifications'),
-  });
-
-  const markAllRead = async () => {
-    await api.post('/notifications/read-all', {});
-    queryClient.invalidateQueries({ queryKey: ['notifications'] });
-    clearUnread();
-  };
-
-  const markOneRead = async (id: string) => {
-    await api.post(`/notifications/${id}/read`, {});
-    queryClient.invalidateQueries({ queryKey: ['notifications'] });
-  };
 
   const today = new Date().toDateString();
-  const notifications = data?.notifications ?? [];
-  const todayNotifs = notifications.filter(
-    (n) => new Date(n.createdAt).toDateString() === today
-  );
-  const earlierNotifs = notifications.filter(
-    (n) => new Date(n.createdAt).toDateString() !== today
-  );
+  const todayNotifs = MOCK_NOTIFICATIONS.filter((n) => new Date(n.createdAt).toDateString() === today);
+  const earlierNotifs = MOCK_NOTIFICATIONS.filter((n) => new Date(n.createdAt).toDateString() !== today);
 
-  const renderNotif = ({ item }: { item: AppNotification }) => (
+  const renderNotif = (item: MockNotif) => (
     <TouchableOpacity
+      key={item.id}
       style={[styles.notifRow, !item.readAt && styles.notifUnread]}
-      onPress={() => {
-        markOneRead(item.id);
-        // Navigate to linked screen based on data
-      }}
+      onPress={() => {}}
       activeOpacity={0.8}
     >
       <View style={styles.notifIcon}>
@@ -87,104 +110,55 @@ export function NotificationsScreen() {
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
-      <ScreenHeader
-        title="Notifications"
-        rightAction={
-          notifications.some((n) => !n.readAt) ? (
-            <TouchableOpacity onPress={markAllRead}>
-              <Text style={styles.markAll}>Mark all</Text>
-            </TouchableOpacity>
-          ) : undefined
+      <ScreenHeader title="Notifications" />
+      <FlatList
+        data={[]}
+        renderItem={() => null}
+        ListHeaderComponent={
+          <>
+            {todayNotifs.length > 0 && (
+              <>
+                <Text style={styles.sectionLabel}>Today</Text>
+                {todayNotifs.map(renderNotif)}
+              </>
+            )}
+            {earlierNotifs.length > 0 && (
+              <>
+                <Text style={styles.sectionLabel}>Earlier</Text>
+                {earlierNotifs.map(renderNotif)}
+              </>
+            )}
+          </>
         }
+        contentContainerStyle={styles.list}
       />
-      {isLoading ? (
-        <View style={{ padding: Layout.screenPadding, gap: 12 }}>
-          {[1, 2, 3].map((i) => <CardSkeleton key={i} />)}
-        </View>
-      ) : notifications.length === 0 ? (
-        <EmptyState
-          title="You're all caught up"
-          subtitle="Notifications about bills, payments and housemates show up here."
-        />
-      ) : (
-        <FlatList
-          data={[]}
-          renderItem={() => null}
-          ListHeaderComponent={
-            <>
-              {todayNotifs.length > 0 && (
-                <>
-                  <Text style={styles.sectionLabel}>Today</Text>
-                  {todayNotifs.map((n) => renderNotif({ item: n }))}
-                </>
-              )}
-              {earlierNotifs.length > 0 && (
-                <>
-                  <Text style={styles.sectionLabel}>Earlier</Text>
-                  {earlierNotifs.map((n) => renderNotif({ item: n }))}
-                </>
-              )}
-            </>
-          }
-          contentContainerStyle={styles.list}
-          refreshControl={
-            <RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={Colors.green} />
-          }
-        />
-      )}
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.screen },
-  markAll: { ...Typography.captionSmall, color: Colors.ink, fontFamily: 'Syne_800ExtraBold' },
-  list: {
-    padding: Layout.screenPadding,
-    paddingBottom: Layout.contentBottomPadding,
-  },
+  list: { padding: Layout.screenPadding, paddingBottom: Layout.contentBottomPadding },
   sectionLabel: {
-    ...Typography.captionSmall,
-    color: Colors.textMuted,
-    fontFamily: 'Syne_800ExtraBold',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginBottom: 8,
-    marginTop: 8,
+    ...Typography.captionSmall, color: Colors.textMuted,
+    fontFamily: 'Syne_800ExtraBold', textTransform: 'uppercase',
+    letterSpacing: 0.5, marginBottom: 8, marginTop: 8,
   },
   notifRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    backgroundColor: Colors.white,
-    borderRadius: Radius.cardSm,
-    padding: 14,
-    marginBottom: 8,
-    gap: 12,
-    borderWidth: 1,
-    borderColor: Colors.line,
+    flexDirection: 'row', alignItems: 'flex-start',
+    backgroundColor: Colors.white, borderRadius: Radius.cardSm,
+    padding: 14, marginBottom: 8, gap: 12,
+    borderWidth: 1, borderColor: Colors.line,
   },
-  notifUnread: {
-    borderColor: Colors.green,
-    backgroundColor: Colors.mint,
-  },
+  notifUnread: { borderColor: Colors.green, backgroundColor: Colors.mint },
   notifIcon: {
-    width: 38,
-    height: 38,
-    borderRadius: 10,
-    backgroundColor: Colors.screen,
-    alignItems: 'center',
-    justifyContent: 'center',
+    width: 38, height: 38, borderRadius: 10,
+    backgroundColor: Colors.screen, alignItems: 'center', justifyContent: 'center',
   },
   notifIconText: { fontSize: 20 },
   notifContent: { flex: 1, gap: 2 },
   notifTitle: { ...Typography.label, color: Colors.ink },
   notifBody: { ...Typography.caption, color: Colors.textSecondary, lineHeight: 18 },
   notifTime: { ...Typography.caption, color: Colors.textMuted, marginTop: 4 },
-  unreadDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: Colors.green,
-    marginTop: 4,
-  },
+  unreadDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: Colors.green, marginTop: 4 },
 });

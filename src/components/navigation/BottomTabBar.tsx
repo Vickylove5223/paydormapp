@@ -24,7 +24,7 @@ import { HomeIcon, BillsIcon, LeviesIcon, MeIcon } from '@/components/icons/NavI
 const TABS = [
   { name: 'Home', label: 'Home', Icon: HomeIcon },
   { name: 'Bills', label: 'Bills', Icon: BillsIcon },
-  { name: 'Levies', label: 'Levies', Icon: LeviesIcon },
+  { name: 'Levies', label: 'Charges', Icon: LeviesIcon },
   { name: 'Me', label: 'Me', Icon: MeIcon },
 ];
 

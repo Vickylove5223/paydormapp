@@ -12,11 +12,22 @@ import { CardSkeleton } from '@/components/common/SkeletonLoader';
 import { EmptyState } from '@/components/common/EmptyState';
 import { Chip } from '@/components/common/Chip';
 
+const MOCK_PAYMENTS: Payment[] = [
+  { id: 'mp1', allocationId: 'a1', userId: 'u1', reference: 'PD-2026100001', method: 'wallet', amount: 1200000, status: 'success', createdAt: '2026-10-11T08:22:00Z' },
+  { id: 'mp2', allocationId: 'a2', userId: 'u1', reference: 'PD-2026100002', method: 'card', amount: 500000, status: 'success', createdAt: '2026-10-09T16:45:00Z' },
+  { id: 'mp3', allocationId: 'a3', userId: 'u1', reference: 'PD-2026090003', method: 'wallet', amount: 1200000, status: 'success', createdAt: '2026-09-29T08:00:00Z' },
+  { id: 'mp4', allocationId: 'a4', userId: 'u1', reference: 'PD-2026090004', method: 'transfer', amount: 500000, status: 'success', createdAt: '2026-09-28T10:00:00Z' },
+  { id: 'mp5', allocationId: 'a5', userId: 'u1', reference: 'PD-2026090005', method: 'wallet', amount: 350000, status: 'failed', createdAt: '2026-09-27T14:00:00Z' },
+];
+
 export function MyPaymentsScreen() {
   const { data, isLoading } = useQuery({
     queryKey: ['myPayments'],
     queryFn: () => api.get<{ payments: Payment[] }>('/payments/mine'),
+    enabled: false,
   });
+
+  const payments = data?.payments ?? MOCK_PAYMENTS;
 
   const statusColor: Record<string, string> = {
     success: Colors.paid,
@@ -40,20 +51,12 @@ export function MyPaymentsScreen() {
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <ScreenHeader title="My payments" />
-      {isLoading ? (
-        <View style={{ padding: Layout.screenPadding, gap: 12 }}>
-          {[1, 2, 3].map((i) => <CardSkeleton key={i} />)}
-        </View>
-      ) : !data?.payments.length ? (
-        <EmptyState title="No payments yet" subtitle="Your payment history will appear here." />
-      ) : (
-        <FlatList
-          data={data.payments}
-          renderItem={renderItem}
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.list}
-        />
-      )}
+      <FlatList
+        data={payments}
+        renderItem={renderItem}
+        keyExtractor={(item) => item.id}
+        contentContainerStyle={styles.list}
+      />
     </SafeAreaView>
   );
 }

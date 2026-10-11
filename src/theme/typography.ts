@@ -11,6 +11,7 @@ export const FontFamily = {
 export const Typography = {
   display: {
     fontFamily: FontFamily.syneExtraBold,
+    fontWeight: '800',
     fontSize: 40,
     letterSpacing: -0.8,
     lineHeight: 44,
@@ -18,6 +19,7 @@ export const Typography = {
 
   h1: {
     fontFamily: FontFamily.syneExtraBold,
+    fontWeight: '800',
     fontSize: 34,
     letterSpacing: -0.68,
     lineHeight: 38,
@@ -25,13 +27,15 @@ export const Typography = {
 
   h2: {
     fontFamily: FontFamily.syneExtraBold,
-    fontSize: 28,
-    letterSpacing: -0.56,
-    lineHeight: 32,
+    fontWeight: '800',
+    fontSize: 20,
+    letterSpacing: -0.4,
+    lineHeight: 26,
   } as TextStyle,
 
   title: {
     fontFamily: FontFamily.syneExtraBold,
+    fontWeight: '800',
     fontSize: 18,
     letterSpacing: -0.36,
     lineHeight: 22,
@@ -39,6 +43,7 @@ export const Typography = {
 
   amount: {
     fontFamily: FontFamily.syneExtraBold,
+    fontWeight: '800',
     fontSize: 28,
     letterSpacing: -0.56,
     lineHeight: 32,
@@ -46,6 +51,7 @@ export const Typography = {
 
   amountLarge: {
     fontFamily: FontFamily.syneExtraBold,
+    fontWeight: '800',
     fontSize: 34,
     letterSpacing: -0.68,
     lineHeight: 38,

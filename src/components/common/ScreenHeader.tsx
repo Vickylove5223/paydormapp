@@ -104,6 +104,8 @@ const styles = StyleSheet.create({
     flex: 1,
     textAlign: 'center',
     ...Typography.title,
+    fontSize: 15,
+    lineHeight: 20,
   },
   right: {
     minWidth: 40,
