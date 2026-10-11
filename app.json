@@ -1,0 +1,42 @@
+{
+  "expo": {
+    "name": "PayDorm",
+    "slug": "paydorm",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#40CE86"
+    },
+    "scheme": "paydorm",
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.paydorm.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0C1822"
+      },
+      "package": "com.paydorm.app",
+      "permissions": ["NOTIFICATIONS", "RECEIVE_BOOT_COMPLETED", "VIBRATE"]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-font",
+      "expo-secure-store",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#40CE86"
+        }
+      ]
+    ]
+  }
+}

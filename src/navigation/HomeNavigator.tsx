@@ -1,0 +1,20 @@
+import React from 'react';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { HomeStackParams } from './types';
+import { HomeScreen } from '@/screens/main/HomeScreen';
+import { NotificationsScreen } from '@/screens/me/NotificationsScreen';
+import { BillDetailScreen } from '@/screens/bills/BillDetailScreen';
+import { PaymentDetailScreen } from '@/screens/levies/PaymentDetailScreen';
+
+const Stack = createNativeStackNavigator<HomeStackParams>();
+
+export function HomeNavigator() {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="HomeMain" component={HomeScreen} />
+      <Stack.Screen name="Notifications" component={NotificationsScreen} />
+      <Stack.Screen name="BillDetail" component={BillDetailScreen} />
+      <Stack.Screen name="PaymentDetail" component={PaymentDetailScreen} />
+    </Stack.Navigator>
+  );
+}

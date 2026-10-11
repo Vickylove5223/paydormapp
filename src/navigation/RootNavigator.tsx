@@ -1,0 +1,22 @@
+import React from 'react';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { useAuthStore } from '@/store/auth';
+import { AuthNavigator } from './AuthNavigator';
+import { MainNavigator } from './MainNavigator';
+import { RootStackParams } from './types';
+
+const Stack = createNativeStackNavigator<RootStackParams>();
+
+export function RootNavigator() {
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      {isAuthenticated ? (
+        <Stack.Screen name="Main" component={MainNavigator} />
+      ) : (
+        <Stack.Screen name="Auth" component={AuthNavigator} />
+      )}
+    </Stack.Navigator>
+  );
+}
