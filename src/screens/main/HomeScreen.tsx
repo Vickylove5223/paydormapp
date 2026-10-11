@@ -369,7 +369,7 @@ function TenantHome({ navigation }: { navigation: any }) {
           {/* Header: icon + title */}
           <View style={styles.communityTitleRow}>
             <View style={styles.communityIconCircle}>
-              <BuildingIcon color="#fff" />
+              <BuildingIcon color={Colors.ink} />
             </View>
             <Text style={styles.communityTitle}>Shared Community Bills</Text>
           </View>
@@ -668,11 +668,11 @@ const styles = StyleSheet.create({
   },
   communityIconCircle: {
     width: 32, height: 32, borderRadius: 16,
-    backgroundColor: 'rgba(12,24,34,0.25)',
+    backgroundColor: 'rgba(12,24,34,0.08)',
     alignItems: 'center', justifyContent: 'center',
   },
   communityTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  communityTitle: { ...Typography.label, color: Colors.ink, fontSize: 13 },
+  communityTitle: { ...Typography.label, color: Colors.ink, fontSize: 14, fontFamily: 'Syne_800ExtraBold' },
   paidBadge: { alignItems: 'flex-end', gap: 4 },
   avatarStack: { flexDirection: 'row', alignItems: 'center' },
   miniAvatar: { width: 18, height: 18, borderRadius: 9, borderWidth: 1.5, borderColor: Colors.green },
@@ -682,7 +682,7 @@ const styles = StyleSheet.create({
   communityTotalAmount: { ...Typography.amountLarge, color: Colors.ink, fontSize: 28, lineHeight: 34 },
   communityDivider: { height: 1, backgroundColor: 'rgba(12,24,34,0.08)' },
   communityFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  communityOweAmount: { ...Typography.label, color: Colors.ink, marginTop: 2 },
+  communityOweAmount: { ...Typography.amountLarge, color: Colors.ink, fontSize: 26, marginTop: 2 },
   payNowDarkBtn: {
     backgroundColor: Colors.ink, borderRadius: 99,
     paddingHorizontal: 16, paddingVertical: 8,
