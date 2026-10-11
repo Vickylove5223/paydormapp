@@ -33,6 +33,7 @@ interface ScreenHeaderProps {
   dark?: boolean;
   noBorder?: boolean;
   backgroundColor?: string;
+  align?: 'left' | 'center';
 }
 
 export function ScreenHeader({
@@ -43,6 +44,7 @@ export function ScreenHeader({
   dark = false,
   noBorder = false,
   backgroundColor,
+  align = 'center',
 }: ScreenHeaderProps) {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
@@ -66,7 +68,14 @@ export function ScreenHeader({
           <View style={styles.backBtn} />
         )}
 
-        <Text style={[styles.title, { color: fg }]} numberOfLines={1}>
+        <Text
+          style={[
+            styles.title,
+            align === 'left' ? styles.titleLeft : styles.titleCenter,
+            { color: fg },
+          ]}
+          numberOfLines={1}
+        >
           {title}
         </Text>
 
@@ -102,10 +111,16 @@ const styles = StyleSheet.create({
   },
   title: {
     flex: 1,
-    textAlign: 'center',
     ...Typography.title,
-    fontSize: 15,
+    fontSize: 16,
     lineHeight: 20,
+  },
+  titleCenter: {
+    textAlign: 'center',
+  },
+  titleLeft: {
+    textAlign: 'left',
+    paddingLeft: 6,
   },
   right: {
     minWidth: 40,

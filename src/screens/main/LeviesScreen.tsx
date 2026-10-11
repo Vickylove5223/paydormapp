@@ -4,7 +4,10 @@ import {
   Text,
   StyleSheet,
   FlatList,
+  ScrollView,
   TouchableOpacity,
+  Modal,
+  Pressable,
   Alert,
 } from 'react-native';
 import Svg, { Path, Rect, Circle, Ellipse } from 'react-native-svg';
@@ -23,27 +26,29 @@ interface ManagedBill extends Bill {
   category: 'shared' | 'one_time' | 'private' | 'copartner';
   tenantName?: string;
   household?: string;
+  payoutBank?: string;
+  payoutAcct?: string;
 }
 
 const ALL_BILLS: ManagedBill[] = [
   // Shared
-  { id: 'b1', type: 'electricity', title: 'August EKEDC', totalAmount: 1200000, dueDate: '2026-10-05', state: 'overdue', period: '2026-10', category: 'shared', tenantName: 'All tenants' },
-  { id: 'b2', type: 'service_charge', title: 'October Service Charge', totalAmount: 500000, dueDate: '2026-10-15', state: 'due', period: '2026-10', category: 'shared', tenantName: 'All tenants' },
-  { id: 'b3', type: 'water', title: 'Water Supply — Q4', totalAmount: 350000, dueDate: '2026-10-30', state: 'upcoming', period: '2026-10', category: 'shared', tenantName: 'All tenants' },
-  { id: 'b4', type: 'security', title: 'Security Charge', totalAmount: 200000, dueDate: '2026-10-20', state: 'upcoming', period: '2026-10', category: 'shared', tenantName: 'All tenants' },
-  { id: 'b5', type: 'internet', title: 'Estate Wi-Fi', totalAmount: 150000, dueDate: '2026-10-01', state: 'paid', period: '2026-10', category: 'shared', tenantName: 'All tenants' },
-  { id: 'b6', type: 'electricity', title: 'September EKEDC', totalAmount: 1100000, dueDate: '2026-09-05', state: 'paid', period: '2026-09', category: 'shared', tenantName: 'All tenants' },
+  { id: 'b1', type: 'electricity', title: 'August EKEDC', totalAmount: 1200000, dueDate: '2026-10-05', state: 'overdue', period: '2026-10', category: 'shared', tenantName: 'All tenants', payoutBank: 'GTBank', payoutAcct: '···· 8901' },
+  { id: 'b2', type: 'service_charge', title: 'October Service Charge', totalAmount: 500000, dueDate: '2026-10-15', state: 'due', period: '2026-10', category: 'shared', tenantName: 'All tenants', payoutBank: 'GTBank', payoutAcct: '···· 8901' },
+  { id: 'b3', type: 'water', title: 'Water Supply — Q4', totalAmount: 350000, dueDate: '2026-10-30', state: 'upcoming', period: '2026-10', category: 'shared', tenantName: 'All tenants', payoutBank: 'Access Bank', payoutAcct: '···· 7112' },
+  { id: 'b4', type: 'security', title: 'Security Charge', totalAmount: 200000, dueDate: '2026-10-20', state: 'upcoming', period: '2026-10', category: 'shared', tenantName: 'All tenants', payoutBank: 'GTBank', payoutAcct: '···· 8901' },
+  { id: 'b5', type: 'internet', title: 'Estate Wi-Fi', totalAmount: 150000, dueDate: '2026-10-01', state: 'paid', period: '2026-10', category: 'shared', tenantName: 'All tenants', payoutBank: 'Zenith Bank', payoutAcct: '···· 2204' },
+  { id: 'b6', type: 'electricity', title: 'September EKEDC', totalAmount: 1100000, dueDate: '2026-09-05', state: 'paid', period: '2026-09', category: 'shared', tenantName: 'All tenants', payoutBank: 'GTBank', payoutAcct: '···· 8901' },
   // One-time
-  { id: 'ot1', type: 'other', title: 'Flat 3B — Plumbing repair', totalAmount: 180000, dueDate: '2026-10-18', state: 'due', period: '2026-10', category: 'one_time', tenantName: 'Femi Adekunle', household: 'Flat 3B' },
-  { id: 'ot2', type: 'other', title: 'Window replacement', totalAmount: 95000, dueDate: '2026-09-30', state: 'paid', period: '2026-09', category: 'one_time', tenantName: 'Amara Nwosu', household: 'Flat 1A' },
+  { id: 'ot1', type: 'other', title: 'Flat 3B — Plumbing repair', totalAmount: 180000, dueDate: '2026-10-18', state: 'due', period: '2026-10', category: 'one_time', tenantName: 'Femi Adekunle', household: 'Flat 3B', payoutBank: 'Kuda Bank', payoutAcct: '···· 5523' },
+  { id: 'ot2', type: 'other', title: 'Window replacement', totalAmount: 95000, dueDate: '2026-09-30', state: 'paid', period: '2026-09', category: 'one_time', tenantName: 'Amara Nwosu', household: 'Flat 1A', payoutBank: 'Access Bank', payoutAcct: '···· 7112' },
   // Private
-  { id: 'pb1', type: 'other', title: 'Netflix subscription', totalAmount: 45000, dueDate: '2026-10-25', state: 'upcoming', period: '2026-10', category: 'private' },
-  { id: 'pb2', type: 'internet', title: 'Personal fibre — Q4', totalAmount: 120000, dueDate: '2026-10-01', state: 'paid', period: '2026-10', category: 'private' },
-  { id: 'pb3', type: 'other', title: 'Amazon Prime', totalAmount: 35000, dueDate: '2026-09-20', state: 'paid', period: '2026-09', category: 'private' },
+  { id: 'pb1', type: 'other', title: 'Netflix subscription', totalAmount: 45000, dueDate: '2026-10-25', state: 'upcoming', period: '2026-10', category: 'private', payoutBank: 'OPay', payoutAcct: '···· 3310' },
+  { id: 'pb2', type: 'internet', title: 'Personal fibre — Q4', totalAmount: 120000, dueDate: '2026-10-01', state: 'paid', period: '2026-10', category: 'private', payoutBank: 'Zenith Bank', payoutAcct: '···· 2204' },
+  { id: 'pb3', type: 'other', title: 'Amazon Prime', totalAmount: 35000, dueDate: '2026-09-20', state: 'paid', period: '2026-09', category: 'private', payoutBank: 'OPay', payoutAcct: '···· 3310' },
   // Co-partner
-  { id: 'cp0', type: 'other', title: 'Joint streaming plan', totalAmount: 60000, dueDate: '2026-10-20', state: 'paid', period: '2026-10', category: 'copartner', tenantName: 'Femi Adekunle + 1' },
-  { id: 'cp2', type: 'internet', title: 'Shared broadband', totalAmount: 90000, dueDate: '2026-10-15', state: 'due', period: '2026-10', category: 'copartner', tenantName: 'Kemi Okafor + 1' },
-  { id: 'cp3', type: 'other', title: 'Joint streaming plan', totalAmount: 60000, dueDate: '2026-09-20', state: 'paid', period: '2026-09', category: 'copartner', tenantName: 'Tolu Adeyemi + 1' },
+  { id: 'cp0', type: 'other', title: 'Joint streaming plan', totalAmount: 60000, dueDate: '2026-10-20', state: 'paid', period: '2026-10', category: 'copartner', tenantName: 'Femi Adekunle + 1', payoutBank: 'GTBank', payoutAcct: '···· 8901' },
+  { id: 'cp2', type: 'internet', title: 'Shared broadband', totalAmount: 90000, dueDate: '2026-10-15', state: 'due', period: '2026-10', category: 'copartner', tenantName: 'Kemi Okafor + 1', payoutBank: 'Access Bank', payoutAcct: '···· 7112' },
+  { id: 'cp3', type: 'other', title: 'Joint streaming plan', totalAmount: 60000, dueDate: '2026-09-20', state: 'paid', period: '2026-09', category: 'copartner', tenantName: 'Tolu Adeyemi + 1', payoutBank: 'GTBank', payoutAcct: '···· 8901' },
 ];
 
 const CATEGORY_META: Record<string, { label: string; icon: () => React.ReactElement; iconBg: string }> = {
@@ -125,44 +130,65 @@ function TrashIcon() {
 
 function BillRow({
   item,
-  onPress,
   onEdit,
   onDelete,
 }: {
   item: ManagedBill;
-  onPress: () => void;
   onEdit: () => void;
   onDelete: () => void;
 }) {
+  const [menuOpen, setMenuOpen] = useState(false);
   const meta = CATEGORY_META[item.category];
   return (
-    <TouchableOpacity style={styles.row} onPress={onPress} activeOpacity={0.85}>
+    <View style={styles.row}>
       <View style={[styles.iconBox, { backgroundColor: meta.iconBg }]}>
         <meta.icon />
       </View>
       <View style={styles.rowInfo}>
         <Text style={styles.rowTitle} numberOfLines={1}>{item.title}</Text>
-        <View style={styles.rowMeta}>
-          <Text style={styles.rowDue}>{formatDueDate(item.dueDate)}</Text>
-          {item.tenantName && <Text style={styles.rowTenant} numberOfLines={1}> · {item.tenantName}</Text>}
-        </View>
+        <Text style={styles.rowDue}>{formatDueDate(item.dueDate)}</Text>
+        {item.payoutBank ? (
+          <View style={styles.payoutRow}>
+            <Svg width={10} height={10} viewBox="0 0 24 24" fill="none">
+              <Rect x={2} y={5} width={20} height={14} rx={2} fill={Colors.violet} stroke={Colors.ink} strokeWidth={1.8} />
+              <Path d="M2 10h20" stroke={Colors.ink} strokeWidth={1.8} strokeLinecap="round" />
+            </Svg>
+            <Text style={styles.payoutText}>{item.payoutBank} {item.payoutAcct}</Text>
+          </View>
+        ) : null}
       </View>
       <View style={styles.rowRight}>
         <Text style={styles.rowAmount}>{formatNaira(item.totalAmount)}</Text>
-        <View style={styles.rowStatusRow}>
-          <View style={[styles.dot, { backgroundColor: STATE_DOT[item.state] ?? Colors.textMuted }]} />
-          <Text style={styles.rowState}>{billStateLabel(item.state)}</Text>
-        </View>
       </View>
       <View style={styles.rowActions}>
-        <TouchableOpacity style={styles.actionBtn} onPress={onEdit} hitSlop={{ top: 8, bottom: 8, left: 8, right: 4 }}>
-          <EditIcon />
+        <TouchableOpacity
+          style={styles.actionBtn}
+          onPress={() => setMenuOpen(true)}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+        >
+          <Svg width={18} height={18} viewBox="0 0 24 24" fill="none">
+            <Circle cx={12} cy={5} r={1.5} fill={Colors.textMuted} />
+            <Circle cx={12} cy={12} r={1.5} fill={Colors.textMuted} />
+            <Circle cx={12} cy={19} r={1.5} fill={Colors.textMuted} />
+          </Svg>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.actionBtn} onPress={onDelete} hitSlop={{ top: 8, bottom: 8, left: 4, right: 8 }}>
-          <TrashIcon />
-        </TouchableOpacity>
+        <Modal visible={menuOpen} transparent animationType="fade" onRequestClose={() => setMenuOpen(false)}>
+          <Pressable style={styles.menuOverlay} onPress={() => setMenuOpen(false)}>
+            <View style={styles.menuBox}>
+              <TouchableOpacity style={styles.menuItem} onPress={() => { setMenuOpen(false); onEdit(); }}>
+                <EditIcon />
+                <Text style={styles.menuItemText}>Edit bill</Text>
+              </TouchableOpacity>
+              <View style={styles.menuDivider} />
+              <TouchableOpacity style={styles.menuItem} onPress={() => { setMenuOpen(false); onDelete(); }}>
+                <TrashIcon />
+                <Text style={[styles.menuItemText, { color: '#E8724A' }]}>Delete bill</Text>
+              </TouchableOpacity>
+            </View>
+          </Pressable>
+        </Modal>
       </View>
-    </TouchableOpacity>
+    </View>
   );
 }
 
@@ -180,12 +206,53 @@ function CategoryHeader({ label, count, total }: { label: string; count: number;
 // ── Main screen ────────────────────────────────────────────────────────────────
 
 const FILTERS: { id: BillCategory; label: string }[] = [
-  { id: 'all', label: 'All' },
   { id: 'shared', label: 'Shared' },
   { id: 'one_time', label: 'One-time' },
   { id: 'private', label: 'Private' },
   { id: 'copartner', label: 'Co-partner' },
 ];
+
+const BILL_TYPE_OPTIONS: { scope: BillCategory; label: string; sub: string; icon: () => React.ReactElement; iconBg: string }[] = [
+  {
+    scope: 'shared',
+    label: 'Shared bill',
+    sub: 'Split equally across all tenants',
+    icon: PeopleIcon,
+    iconBg: Colors.violetTint,
+  },
+  {
+    scope: 'one_time',
+    label: 'One-time bill',
+    sub: 'Single charge for a specific tenant',
+    icon: DocumentIcon,
+    iconBg: Colors.violetTint,
+  },
+  {
+    scope: 'private',
+    label: 'Private bill',
+    sub: 'Assigned to one household only',
+    icon: LockIcon,
+    iconBg: Colors.screen,
+  },
+  {
+    scope: 'copartner',
+    label: 'Co-partner bill',
+    sub: 'Shared between selected tenants',
+    icon: CoPartnerIcon,
+    iconBg: Colors.violetTint,
+  },
+];
+
+function CoPartnerIcon() {
+  return (
+    <Svg width={22} height={22} viewBox="0 0 24 24" fill="none">
+      <Circle cx={7} cy={8} r={3} fill={Colors.violet} stroke={Colors.ink} strokeWidth={1.6} />
+      <Circle cx={17} cy={8} r={3} fill={Colors.violet} stroke={Colors.ink} strokeWidth={1.6} />
+      <Path d="M1 20c0-3.314 2.686-5 6-5s6 1.686 6 5" stroke={Colors.ink} strokeWidth={1.8} strokeLinecap="round" />
+      <Path d="M17 15c3.314 0 6 1.686 6 5" stroke={Colors.ink} strokeWidth={1.8} strokeLinecap="round" />
+    </Svg>
+  );
+}
 
 export function LeviesScreen() {
   const navigation = useNavigation<any>();
@@ -193,8 +260,9 @@ export function LeviesScreen() {
   const effectiveRole = role ?? 'master_tenant';
   const canManage = effectiveRole === 'master_tenant' || effectiveRole === 'landlord' || effectiveRole === 'agent';
 
-  const [filter, setFilter] = useState<BillCategory>('all');
+  const [filter, setFilter] = useState<BillCategory>('shared');
   const [bills, setBills] = useState<ManagedBill[]>(ALL_BILLS);
+  const [showAddDrawer, setShowAddDrawer] = useState(false);
 
   const filtered = filter === 'all' ? bills : bills.filter(b => b.category === filter);
 
@@ -236,7 +304,6 @@ export function LeviesScreen() {
     return (
       <BillRow
         item={item.bill}
-        onPress={() => navigation.navigate('BillDetail', { billId: item.bill.id })}
         onEdit={() => navigation.navigate('AddBill', { billId: item.bill.id })}
         onDelete={() => handleDelete(item.bill.id)}
       />
@@ -248,38 +315,35 @@ export function LeviesScreen() {
       <View style={styles.header}>
         <View>
           <Text style={styles.headerTitle}>Charges</Text>
-          <Text style={styles.headerSub}>Bill management</Text>
         </View>
         {canManage && (
-          <TouchableOpacity style={styles.addBtn} onPress={() => navigation.navigate('AddBill', {})}>
-            <Text style={styles.addBtnText}>+ Add bill</Text>
+          <TouchableOpacity style={styles.addBtn} onPress={() => setShowAddDrawer(true)}>
+            <Svg width={14} height={14} viewBox="0 0 24 24" fill="none">
+              <Path d="M12 5v14M5 12h14" stroke={Colors.ink} strokeWidth={2.5} strokeLinecap="round" />
+            </Svg>
+            <Text style={styles.addBtnText}>Add bill</Text>
           </TouchableOpacity>
         )}
-      </View>
-
-      {/* Summary */}
-      <View style={styles.summaryCard}>
-        <Text style={styles.summaryLabel}>Total collected</Text>
-        <Text style={styles.summaryAmount}>{formatNaira(totalCollected)}</Text>
-        <Text style={styles.summaryMeta}>{bills.filter(b => b.state === 'paid').length} of {bills.length} bills paid</Text>
       </View>
 
       {/* Filter chips */}
-      <FlatList
-        horizontal
-        data={FILTERS}
-        keyExtractor={f => f.id}
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.filterRow}
-        renderItem={({ item: f }) => (
-          <TouchableOpacity
-            style={[styles.chip, filter === f.id && styles.chipActive]}
-            onPress={() => setFilter(f.id)}
-          >
-            <Text style={[styles.chipText, filter === f.id && styles.chipTextActive]}>{f.label}</Text>
-          </TouchableOpacity>
-        )}
-      />
+      <View style={styles.filterWrapper}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.filterRow}
+        >
+          {FILTERS.map(f => (
+            <TouchableOpacity
+              key={f.id}
+              style={[styles.chip, filter === f.id && styles.chipActive]}
+              onPress={() => setFilter(f.id)}
+            >
+              <Text style={[styles.chipText, filter === f.id && styles.chipTextActive]}>{f.label}</Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      </View>
 
       <FlatList
         data={listData}
@@ -288,6 +352,41 @@ export function LeviesScreen() {
         contentContainerStyle={styles.list}
         showsVerticalScrollIndicator={false}
       />
+
+      {/* Add bill bottom drawer */}
+      <Modal visible={showAddDrawer} transparent animationType="slide" onRequestClose={() => setShowAddDrawer(false)}>
+        <Pressable style={styles.drawerOverlay} onPress={() => setShowAddDrawer(false)}>
+          <View style={styles.drawerSheet}>
+            <View style={styles.drawerHandle} />
+            <Text style={styles.drawerTitle}>What type of bill?</Text>
+            <Text style={styles.drawerSub}>Choose how this bill will be assigned</Text>
+            <View style={styles.drawerList}>
+              {BILL_TYPE_OPTIONS.map((opt) => (
+                <TouchableOpacity
+                  key={opt.scope}
+                  style={styles.drawerRow}
+                  activeOpacity={0.75}
+                  onPress={() => {
+                    setShowAddDrawer(false);
+                    navigation.navigate('AddBill', { scope: opt.scope });
+                  }}
+                >
+                  <View style={[styles.drawerRowIcon, { backgroundColor: opt.iconBg }]}>
+                    <opt.icon />
+                  </View>
+                  <View style={styles.drawerRowInfo}>
+                    <Text style={styles.drawerRowLabel}>{opt.label}</Text>
+                    <Text style={styles.drawerRowSub}>{opt.sub}</Text>
+                  </View>
+                  <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
+                    <Path d="M9 18l6-6-6-6" stroke={Colors.textMuted} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+                  </Svg>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        </Pressable>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -297,12 +396,12 @@ const styles = StyleSheet.create({
 
   header: {
     flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between',
-    paddingHorizontal: Layout.screenPadding, paddingVertical: 16,
+    paddingHorizontal: Layout.screenPadding, paddingTop: 16, paddingBottom: 8,
   },
   headerTitle: { ...Typography.h2, color: Colors.ink },
   headerSub: { ...Typography.caption, color: Colors.textSecondary, marginTop: 2 },
-  addBtn: { backgroundColor: Colors.ink, borderRadius: 99, paddingHorizontal: 14, paddingVertical: 8, marginTop: 4 },
-  addBtnText: { ...Typography.buttonSmall, color: Colors.green },
+  addBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 4 },
+  addBtnText: { ...Typography.label, color: Colors.ink, fontSize: 13 },
 
   summaryCard: {
     marginHorizontal: Layout.screenPadding, marginBottom: 12,
@@ -312,7 +411,8 @@ const styles = StyleSheet.create({
   summaryAmount: { ...Typography.amount, color: Colors.white },
   summaryMeta: { ...Typography.captionSmall, color: 'rgba(255,255,255,0.5)', marginTop: 4 },
 
-  filterRow: { paddingHorizontal: Layout.screenPadding, paddingBottom: 12, gap: 8 },
+  filterWrapper: { flexShrink: 0, marginTop: 12, marginBottom: 8 },
+  filterRow: { paddingHorizontal: Layout.screenPadding, gap: 8, alignItems: 'center' },
   chip: {
     borderWidth: 1.5, borderColor: Colors.ink, borderRadius: 99,
     paddingHorizontal: 14, paddingVertical: 6, backgroundColor: Colors.white,
@@ -321,7 +421,7 @@ const styles = StyleSheet.create({
   chipText: { ...Typography.captionSmall, color: Colors.ink, fontFamily: 'Syne_800ExtraBold' },
   chipTextActive: { color: Colors.ink },
 
-  list: { paddingHorizontal: Layout.screenPadding, paddingBottom: Layout.contentBottomPadding, gap: 8 },
+  list: { paddingHorizontal: Layout.screenPadding, paddingTop: 8, paddingBottom: Layout.contentBottomPadding, gap: 8 },
 
   catHeader: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
@@ -339,13 +439,51 @@ const styles = StyleSheet.create({
   rowInfo: { flex: 1, gap: 3 },
   rowTitle: { ...Typography.label, color: Colors.ink },
   rowMeta: { flexDirection: 'row', alignItems: 'center' },
-  rowDue: { ...Typography.captionSmall, color: Colors.textSecondary },
+  rowDue: { ...Typography.captionSmall, color: Colors.textSecondary, marginBottom: 3 },
+  payoutRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  payoutText: { ...Typography.captionSmall, color: Colors.textMuted, fontSize: 10 },
   rowTenant: { ...Typography.captionSmall, color: Colors.textMuted, flexShrink: 1 },
   rowRight: { alignItems: 'flex-end', gap: 4 },
   rowAmount: { ...Typography.label, color: Colors.ink },
   rowStatusRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   dot: { width: 6, height: 6, borderRadius: 3 },
   rowState: { ...Typography.captionSmall, color: Colors.textMuted },
-  rowActions: { flexDirection: 'row', alignItems: 'center', gap: 4, marginLeft: 4 },
+  rowActions: { flexDirection: 'row', alignItems: 'center', marginLeft: 4 },
   actionBtn: { padding: 4 },
+  menuOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.25)', justifyContent: 'center', alignItems: 'center' },
+  menuBox: {
+    backgroundColor: Colors.white, borderRadius: 14, width: 180,
+    shadowColor: '#000', shadowOpacity: 0.12, shadowRadius: 12, shadowOffset: { width: 0, height: 4 },
+    overflow: 'hidden',
+  },
+  menuItem: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 16, paddingVertical: 14 },
+  menuItemText: { ...Typography.label, color: Colors.ink, fontSize: 14 },
+  menuDivider: { height: 1, backgroundColor: Colors.line },
+
+  drawerOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.35)', justifyContent: 'flex-end' },
+  drawerSheet: {
+    backgroundColor: Colors.white,
+    borderTopLeftRadius: 24, borderTopRightRadius: 24,
+    paddingHorizontal: Layout.screenPadding,
+    paddingTop: 12, paddingBottom: 32,
+  },
+  drawerHandle: {
+    width: 36, height: 4, borderRadius: 2, backgroundColor: Colors.line,
+    alignSelf: 'center', marginBottom: 20,
+  },
+  drawerTitle: { ...Typography.h2, color: Colors.ink, marginBottom: 4 },
+  drawerSub: { ...Typography.caption, color: Colors.textSecondary, marginBottom: 20 },
+  drawerList: { gap: 10 },
+  drawerRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    backgroundColor: Colors.screen, borderRadius: Radius.cardSm,
+    borderWidth: 1, borderColor: Colors.line, padding: 14,
+  },
+  drawerRowIcon: {
+    width: 44, height: 44, borderRadius: 12,
+    alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+  },
+  drawerRowInfo: { flex: 1 },
+  drawerRowLabel: { ...Typography.label, color: Colors.ink, marginBottom: 2 },
+  drawerRowSub: { ...Typography.captionSmall, color: Colors.textSecondary },
 });

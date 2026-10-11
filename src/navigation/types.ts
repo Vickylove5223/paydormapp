@@ -32,13 +32,16 @@ export type HomeStackParams = {
 // ── Bills Stack ───────────────────────────────────────────────────────────────
 export type BillsStackParams = {
   BillsMain: undefined;
-  AddBill: { billId?: string; isPrivate?: boolean } | undefined;
+  AddBill: { billId?: string; isPrivate?: boolean; scope?: string } | undefined;
   BillDetail: { billId: string };
+  PaymentDetail: { paymentId: string };
 };
 
 // ── Levies Stack ──────────────────────────────────────────────────────────────
 export type LeviesStackParams = {
   LeviesMain: undefined;
+  AddBill: { billId?: string; isPrivate?: boolean; scope?: string } | undefined;
+  BillDetail: { billId: string };
   PaymentDetail: { paymentId: string };
 };
 
@@ -46,6 +49,7 @@ export type LeviesStackParams = {
 export type MeStackParams = {
   MeMain: undefined;
   Profile: undefined;
+  PayoutAccount: undefined;
   Wallet: undefined;
   CoPartner: undefined;
   Properties: undefined;

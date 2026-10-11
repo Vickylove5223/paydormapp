@@ -15,23 +15,24 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors, Typography, Layout, Radius } from '@/theme';
 import { formatNaira } from '@/utils/money';
-import { timeAgo } from '@/utils/date';
+import { formatFullDateTime } from '@/utils/date';
 import { ScreenHeader } from '@/components/common/ScreenHeader';
 import { Button } from '@/components/common/Button';
 
 interface LocalTransaction {
   id: string;
+  title?: string;
   type: 'top_up' | 'payment' | 'refund' | 'withdrawal';
   amount: number;
   createdAt: string;
 }
 
 const MOCK_TRANSACTIONS: LocalTransaction[] = [
-  { id: 't1', type: 'top_up', amount: 500000, createdAt: '2026-10-10T14:00:00Z' },
-  { id: 't2', type: 'payment', amount: 120000, createdAt: '2026-10-09T08:22:00Z' },
-  { id: 't3', type: 'payment', amount: 50000, createdAt: '2026-09-29T10:00:00Z' },
-  { id: 't4', type: 'top_up', amount: 200000, createdAt: '2026-09-20T09:00:00Z' },
-  { id: 't5', type: 'withdrawal', amount: 100000, createdAt: '2026-09-15T16:30:00Z' },
+  { id: 't1', title: 'Wallet funded', type: 'top_up', amount: 5000000, createdAt: '2026-10-11T14:00:00Z' },
+  { id: 't2', title: 'Withdrawal', type: 'withdrawal', amount: 1500000, createdAt: '2026-10-10T11:20:00Z' },
+  { id: 't3', title: 'Shared Bill Payment', type: 'payment', amount: 2500000, createdAt: '2026-10-09T08:22:00Z' },
+  { id: 't4', title: 'Borehole fixing payment', type: 'payment', amount: 850000, createdAt: '2026-10-05T16:30:00Z' },
+  { id: 't5', title: 'Private Bill Payment', type: 'payment', amount: 1200000, createdAt: '2026-09-29T10:00:00Z' },
 ];
 
 const VIRTUAL_ACCOUNT = {
@@ -263,12 +264,11 @@ export function WalletScreen() {
   const [directDebit, setDirectDebit] = useState(false);
   const [showTopUp, setShowTopUp] = useState(false);
   const [showWithdraw, setShowWithdraw] = useState(false);
-  const [copied, setCopied] = useState(false);
 
   const handleTopUp = (amountKobo: number) => {
     setBalance((b) => b + amountKobo);
     setTransactions((prev) => [
-      { id: `t${Date.now()}`, type: 'top_up', amount: amountKobo, createdAt: new Date().toISOString() },
+      { id: `t${Date.now()}`, title: 'Wallet funded', type: 'top_up', amount: amountKobo, createdAt: new Date().toISOString() },
       ...prev,
     ]);
   };
@@ -276,21 +276,13 @@ export function WalletScreen() {
   const handleWithdraw = (amountKobo: number) => {
     setBalance((b) => b - amountKobo);
     setTransactions((prev) => [
-      { id: `t${Date.now()}`, type: 'withdrawal', amount: amountKobo, createdAt: new Date().toISOString() },
+      { id: `t${Date.now()}`, title: 'Withdrawal', type: 'withdrawal', amount: amountKobo, createdAt: new Date().toISOString() },
       ...prev,
     ]);
   };
 
-  const handleCopyAccount = () => {
-    if (typeof navigator !== 'undefined' && navigator.clipboard) {
-      navigator.clipboard.writeText(VIRTUAL_ACCOUNT.accountNumber).catch(() => {});
-    }
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
   const txTypeLabel: Record<string, string> = {
-    top_up: 'Top up', payment: 'Payment', refund: 'Refund', withdrawal: 'Withdrawal',
+    top_up: 'Wallet funded', payment: 'Bill payment', refund: 'Refund', withdrawal: 'Withdrawal',
   };
   const txSign: Record<string, string> = { top_up: '+', refund: '+', payment: '-', withdrawal: '-' };
 
@@ -303,23 +295,23 @@ export function WalletScreen() {
           <Text style={styles.balanceLabel}>Available balance</Text>
           <Text style={styles.balance}>{formatNaira(balance)}</Text>
           <View style={styles.balanceActions}>
-            <Button label="Fund wallet" variant="accent" size="md" onPress={() => setShowTopUp(true)} style={styles.balanceBtn} />
-            <Button label="Withdraw" variant="outline" size="md" onPress={() => setShowWithdraw(true)} style={styles.balanceBtn} />
+            <Button
+              label="Fund wallet"
+              variant="accent"
+              size="sm"
+              onPress={() => setShowTopUp(true)}
+              style={styles.balanceBtn}
+              textStyle={styles.balanceBtnText}
+            />
+            <Button
+              label="Withdraw"
+              variant="outline"
+              size="sm"
+              onPress={() => setShowWithdraw(true)}
+              style={styles.balanceBtn}
+              textStyle={styles.balanceBtnText}
+            />
           </View>
-        </View>
-
-        {/* Virtual account */}
-        <View style={styles.accountCard}>
-          <Text style={styles.accountTitle}>Bank transfer to top up</Text>
-          <Text style={styles.accountBank}>{VIRTUAL_ACCOUNT.bankName}</Text>
-          <View style={styles.accountRow}>
-            <Text style={styles.accountNumber}>{VIRTUAL_ACCOUNT.accountNumber}</Text>
-            <TouchableOpacity style={[styles.copyBtn, copied && styles.copyBtnDone]} onPress={handleCopyAccount}>
-              <Text style={styles.copyBtnText}>{copied ? 'Copied!' : 'Copy'}</Text>
-            </TouchableOpacity>
-          </View>
-          <Text style={styles.accountName}>{VIRTUAL_ACCOUNT.accountName}</Text>
-          <Text style={styles.accountHint}>Transfers appear in your wallet automatically.</Text>
         </View>
 
         {/* Direct debit */}
@@ -342,16 +334,19 @@ export function WalletScreen() {
         {/* Transactions */}
         <View style={styles.txSection}>
           <Text style={styles.txTitle}>Transactions</Text>
-          {transactions.map((tx) => (
-            <View key={tx.id} style={styles.txRow}>
-              <View style={styles.txInfo}>
-                <Text style={styles.txType}>{txTypeLabel[tx.type] ?? tx.type}</Text>
-                <Text style={styles.txDate}>{timeAgo(tx.createdAt)}</Text>
+          {transactions.map((tx, i) => (
+            <React.Fragment key={tx.id}>
+              {i > 0 && <View style={styles.txDivider} />}
+              <View style={styles.txRow}>
+                <View style={styles.txInfo}>
+                  <Text style={styles.txType}>{tx.title ?? txTypeLabel[tx.type] ?? tx.type}</Text>
+                  <Text style={styles.txDate}>{formatFullDateTime(tx.createdAt)}</Text>
+                </View>
+                <Text style={[styles.txAmount, tx.type === 'top_up' || tx.type === 'refund' ? styles.txPositive : styles.txNegative]}>
+                  {txSign[tx.type]}{formatNaira(tx.amount)}
+                </Text>
               </View>
-              <Text style={[styles.txAmount, tx.type === 'top_up' || tx.type === 'refund' ? styles.txPositive : styles.txNegative]}>
-                {txSign[tx.type]}{formatNaira(tx.amount)}
-              </Text>
-            </View>
+            </React.Fragment>
           ))}
         </View>
       </ScrollView>
@@ -364,31 +359,19 @@ export function WalletScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.screen },
-  content: { padding: Layout.screenPadding, paddingBottom: Layout.contentBottomPadding, gap: 16 },
+  content: {
+    paddingHorizontal: Layout.screenPadding,
+    paddingTop: 0,
+    paddingBottom: Layout.contentBottomPadding,
+    gap: 16,
+  },
   balanceCard: { backgroundColor: Colors.ink, borderRadius: Radius.card, padding: 20, gap: 8 },
   balanceLabel: { ...Typography.caption, color: 'rgba(255,255,255,0.7)' },
-  balance: { ...Typography.amountLarge, color: Colors.white, marginBottom: 8 },
+  balance: { ...Typography.amountLarge, fontSize: 18, lineHeight: 22, color: Colors.white, marginBottom: 6 },
   balanceActions: { flexDirection: 'row', gap: 10 },
   balanceBtn: { flex: 1 },
-  accountCard: {
-    backgroundColor: Colors.white, borderRadius: Radius.card,
-    borderWidth: 1, borderColor: Colors.line, padding: 16, gap: 6,
-  },
-  accountTitle: {
-    ...Typography.captionSmall, color: Colors.textMuted,
-    fontFamily: 'Syne_800ExtraBold', textTransform: 'uppercase', letterSpacing: 0.5,
-  },
-  accountBank: { ...Typography.label, color: Colors.textSecondary },
-  accountRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 4 },
-  accountNumber: { ...Typography.amount, color: Colors.ink, fontSize: 22 },
-  copyBtn: {
-    backgroundColor: Colors.green, borderRadius: 99, borderWidth: 1.5,
-    borderColor: Colors.ink, paddingHorizontal: 14, paddingVertical: 5,
-  },
-  copyBtnDone: { backgroundColor: Colors.mint },
-  copyBtnText: { ...Typography.captionSmall, color: Colors.ink, fontFamily: 'Syne_800ExtraBold' },
-  accountName: { ...Typography.caption, color: Colors.textSecondary },
-  accountHint: { ...Typography.caption, color: Colors.textMuted, marginTop: 4 },
+  balanceBtnText: { fontSize: 11, lineHeight: 15 },
+
   debitCard: {
     backgroundColor: Colors.white, borderRadius: Radius.card,
     borderWidth: 1, borderColor: Colors.line, padding: 16,
@@ -403,6 +386,7 @@ const styles = StyleSheet.create({
   },
   txTitle: { ...Typography.label, color: Colors.ink },
   txRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 4 },
+  txDivider: { height: 1, backgroundColor: Colors.line },
   txInfo: { gap: 2 },
   txType: { ...Typography.label, color: Colors.ink },
   txDate: { ...Typography.caption, color: Colors.textMuted },

@@ -16,6 +16,8 @@ interface InputProps extends TextInputProps {
   rightIcon?: React.ReactNode;
   onRightIconPress?: () => void;
   containerStyle?: ViewStyle;
+  inputContainerStyle?: ViewStyle;
+  type?: string;
 }
 
 export function TextInput({
@@ -25,9 +27,11 @@ export function TextInput({
   onRightIconPress,
   style,
   containerStyle,
+  inputContainerStyle,
   ...props
 }: InputProps) {
   const [focused, setFocused] = useState(false);
+  const isEditable = props.editable !== false;
 
   return (
     <View style={[styles.wrapper, containerStyle]}>
@@ -35,14 +39,16 @@ export function TextInput({
       <View
         style={[
           styles.inputContainer,
-          focused && styles.inputFocused,
+          !isEditable && styles.inputDisabled,
+          focused && isEditable && styles.inputFocused,
           error ? styles.inputError : undefined,
+          inputContainerStyle,
         ]}
       >
         <RNTextInput
-          style={[styles.input, style]}
+          style={[styles.input, !isEditable && styles.inputDisabledText, style]}
           placeholderTextColor={Colors.textMuted}
-          onFocus={() => setFocused(true)}
+          onFocus={() => isEditable && setFocused(true)}
           onBlur={() => setFocused(false)}
           {...props}
         />
@@ -83,6 +89,11 @@ const styles = StyleSheet.create({
   inputFocused: {
     borderColor: Colors.ink,
   },
+  inputDisabled: {
+    backgroundColor: Colors.screen,
+    borderColor: Colors.border,
+    opacity: 0.85,
+  },
   inputError: {
     borderColor: Colors.overdue,
   },
@@ -94,6 +105,9 @@ const styles = StyleSheet.create({
     // suppress browser's native focus outline on web — component draws its own border
     outlineStyle: 'none',
   } as any,
+  inputDisabledText: {
+    color: Colors.textSecondary,
+  },
   rightIcon: {
     paddingLeft: 8,
     minWidth: 32,

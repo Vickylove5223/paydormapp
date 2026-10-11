@@ -19,6 +19,7 @@ const MOCK_USER: User = {
   lastName: 'Okonkwo',
   whatsappNumber: '+2348000000000',
   residentId: 'PD-84729',
+  avatarUrl: 'mascot:piggy',
   createdAt: '2026-01-01T00:00:00Z',
 };
 

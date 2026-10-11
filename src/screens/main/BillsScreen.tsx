@@ -248,11 +248,12 @@ interface SummaryCardProps {
   iconBg: string;
   expanded: boolean;
   onToggle: () => void;
+  onHeaderPress?: () => void;
 }
 
-function SummaryCard({ title, total, paidCount, totalCount, bg, textColor, subColor, icon, iconBg, expanded, onToggle }: SummaryCardProps) {
+function SummaryCard({ title, total, paidCount, totalCount, bg, textColor, subColor, icon, iconBg, expanded, onToggle, onHeaderPress }: SummaryCardProps) {
   return (
-    <TouchableOpacity style={styles.summaryCard} activeOpacity={0.85} onPress={onToggle}>
+    <TouchableOpacity style={[styles.summaryCard, expanded && { backgroundColor: '#E6F8EE' }]} activeOpacity={0.85} onPress={onHeaderPress ?? onToggle}>
       <View style={[styles.summaryIconWrap, { backgroundColor: iconBg }]}>{icon}</View>
       <View style={styles.summaryInfo}>
         <Text style={styles.summaryTitle}>{title}</Text>
@@ -434,7 +435,7 @@ export function BillsScreen() {
 
               {/* Shared compound card */}
               {shared.length > 0 && (
-                <View style={styles.cardWrapper}>
+                <View style={[styles.cardWrapper, !!expanded[sharedKey] && { backgroundColor: '#E6F8EE', borderColor: '#E6F8EE' }]}>
                   <SummaryCard
                     title="Shared Compound Bills"
                     total={sharedTotal}
@@ -459,7 +460,7 @@ export function BillsScreen() {
 
               {/* One-time bills — tenant view only */}
               {isTenant && oneTime.length > 0 && (
-                <View style={styles.cardWrapper}>
+                <View style={[styles.cardWrapper, !!expanded[oneTimeKey] && { backgroundColor: '#E6F8EE', borderColor: '#E6F8EE' }]}>
                   <SummaryCard
                     title="One-time Bills"
                     total={oneTimeTotal}
@@ -484,7 +485,7 @@ export function BillsScreen() {
 
               {/* Private bills — tenant view only */}
               {isTenant && priv.length > 0 && (
-                <View style={styles.cardWrapper}>
+                <View style={[styles.cardWrapper, !!expanded[privKey] && { backgroundColor: '#E6F8EE', borderColor: '#E6F8EE' }]}>
                   <SummaryCard
                     title="Private Bills"
                     total={privTotal}
@@ -501,7 +502,7 @@ export function BillsScreen() {
                   {expanded[privKey] && priv.map(item => (
                     <View key={item.id}>
                       <View style={styles.rowDivider} />
-                      <PrivateBillRow item={item} onPress={() => navigation.navigate('BillDetail', { billId: item.id })} />
+                      <PrivateBillRow item={item} onPress={() => navigation.navigate('BillDetail', { billId: 'private-all' })} />
                     </View>
                   ))}
                 </View>
@@ -509,7 +510,7 @@ export function BillsScreen() {
 
               {/* Co-partners bills — tenant view only */}
               {isTenant && copartner.length > 0 && (
-                <View style={styles.cardWrapper}>
+                <View style={[styles.cardWrapper, !!expanded[copartnerKey] && { backgroundColor: '#E6F8EE', borderColor: '#E6F8EE' }]}>
                   <SummaryCard
                     title="Co-partners Bills"
                     total={copartnerTotal}

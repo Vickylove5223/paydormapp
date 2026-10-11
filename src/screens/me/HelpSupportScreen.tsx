@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-nati
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors, Typography, Layout, Radius } from '@/theme';
 import { ScreenHeader } from '@/components/common/ScreenHeader';
+import { FlexMascot } from '@/components/icons/FlexMascot';
 
 const FAQS = [
   { q: 'How do I join a compound?', a: 'Ask your landlord or estate manager for the estate code, then go to Me → Properties → Join with code.' },
@@ -25,11 +26,16 @@ export function HelpSupportScreen() {
         ))}
 
         <View style={styles.contactCard}>
-          <Text style={styles.contactTitle}>Still need help?</Text>
-          <Text style={styles.contactSubtitle}>Send us a message on WhatsApp.</Text>
-          <TouchableOpacity style={styles.contactBtn}>
-            <Text style={styles.contactBtnText}>Chat on WhatsApp</Text>
-          </TouchableOpacity>
+          <View style={styles.contactContent}>
+            <Text style={styles.contactTitle}>Still need help?</Text>
+            <Text style={styles.contactSubtitle}>Send us a message on WhatsApp.</Text>
+            <TouchableOpacity style={styles.contactBtn}>
+              <Text style={styles.contactBtnText}>Chat on WhatsApp</Text>
+            </TouchableOpacity>
+          </View>
+          <View style={styles.mascotWrap}>
+            <FlexMascot width={76} height={90} />
+          </View>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -55,19 +61,31 @@ const styles = StyleSheet.create({
     borderRadius: Radius.card,
     borderWidth: 1.5,
     borderColor: Colors.ink,
-    padding: 20,
-    gap: 8,
+    padding: 18,
     marginTop: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  contactContent: {
+    flex: 1,
+    gap: 6,
   },
   contactTitle: { ...Typography.title, color: Colors.ink },
-  contactSubtitle: { ...Typography.body, color: Colors.ink, opacity: 0.8 },
+  contactSubtitle: { ...Typography.caption, color: Colors.ink, opacity: 0.85 },
   contactBtn: {
     backgroundColor: Colors.ink,
     borderRadius: 99,
-    paddingHorizontal: 20,
-    paddingVertical: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 9,
     alignSelf: 'flex-start',
     marginTop: 4,
   },
-  contactBtnText: { ...Typography.button, color: Colors.green },
+  contactBtnText: { ...Typography.buttonSmall, color: Colors.green },
+  mascotWrap: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingLeft: 4,
+  },
 });

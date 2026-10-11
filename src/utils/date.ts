@@ -19,7 +19,7 @@ export function timeAgo(iso: string): string {
   return relativeDate(iso);
 }
 
-/** Format due date: "Due 15 Jan" or "Due today" */
+/** Format due date: "Due 15 Jan 2026" or "Due today" */
 export function formatDueDate(iso: string): string {
   const d = new Date(iso);
   const now = new Date();
@@ -28,7 +28,7 @@ export function formatDueDate(iso: string): string {
     d.getMonth() === now.getMonth() &&
     d.getFullYear() === now.getFullYear();
   if (isToday) return 'Due today';
-  return `Due ${d.toLocaleDateString('en-NG', { day: 'numeric', month: 'short' })}`;
+  return `Due ${d.toLocaleDateString('en-NG', { day: 'numeric', month: 'short', year: 'numeric' })}`;
 }
 
 /** Return month/year label: "October 2026" */
@@ -36,4 +36,20 @@ export function monthYearLabel(period: string): string {
   const [year, month] = period.split('-');
   const d = new Date(parseInt(year), parseInt(month) - 1, 1);
   return d.toLocaleDateString('en-NG', { month: 'long', year: 'numeric' });
+}
+
+/** Return full date and time: "11 Oct 2026, 2:00 PM" */
+export function formatFullDateTime(iso: string): string {
+  const d = new Date(iso);
+  const dateStr = d.toLocaleDateString('en-NG', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  });
+  const timeStr = d.toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+  });
+  return `${dateStr}, ${timeStr}`;
 }

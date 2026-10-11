@@ -3,6 +3,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { MeStackParams } from './types';
 import { MeScreen } from '@/screens/main/MeScreen';
 import { ProfileScreen } from '@/screens/me/ProfileScreen';
+import { PayoutAccountScreen } from '@/screens/me/PayoutAccountScreen';
 import { WalletScreen } from '@/screens/me/WalletScreen';
 import { CoPartnerScreen } from '@/screens/me/CoPartnerScreen';
 import { PropertiesScreen } from '@/screens/me/PropertiesScreen';
@@ -21,6 +22,7 @@ export function MeNavigator() {
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="MeMain" component={MeScreen} />
       <Stack.Screen name="Profile" component={ProfileScreen} />
+      <Stack.Screen name="PayoutAccount" component={PayoutAccountScreen} />
       <Stack.Screen name="Wallet" component={WalletScreen} />
       <Stack.Screen name="CoPartner" component={CoPartnerScreen} />
       <Stack.Screen name="Properties" component={PropertiesScreen} />

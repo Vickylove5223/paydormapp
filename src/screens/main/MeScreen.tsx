@@ -13,6 +13,7 @@ import { useNavigation } from '@react-navigation/native';
 import { Colors, Typography, Layout, Radius } from '@/theme';
 import { useAuthStore } from '@/store/auth';
 import { useAppStore } from '@/store/app';
+import { UserAvatar } from '@/components/common/UserAvatar';
 
 // ── Mascot Avatar ─────────────────────────────────────────────────────────────
 
@@ -195,15 +196,14 @@ interface MenuRow {
 
 const SHORTCUT_CARDS: ShortcutCard[] = [
   { label: 'Wallet', sublabel: 'Balance & top up', icon: WalletIcon, route: 'Wallet' },
-  { label: 'My payments', sublabel: 'History', icon: PaymentsIcon, route: 'MyPayments' },
+  { label: 'Properties', sublabel: 'My homes', icon: PropertiesIcon, route: 'Properties' },
   { label: 'Co-partner', sublabel: 'Housemates', icon: CoPartnerIcon, route: 'CoPartner' },
   { label: 'Gate pass', sublabel: 'Coming soon', icon: GatePassIcon, route: 'GatePass' },
 ];
 
 const MENU_ROWS: MenuRow[] = [
-  { label: 'Properties', icon: PropertiesIcon, route: 'Properties' },
   { label: 'Profile', icon: ProfileIcon, route: 'Profile' },
-  { label: 'Payout account', icon: PayoutIcon, route: 'Profile' },
+  { label: 'Payout account', icon: PayoutIcon, route: 'PayoutAccount' },
   { label: 'Notifications', icon: NotificationsIcon, route: 'Notifications' },
   { label: 'Security', icon: SecurityIcon, route: 'Security' },
   { label: 'Rate PayDorm', icon: RateIcon, route: 'HelpSupport' },
@@ -250,17 +250,16 @@ export function MeScreen() {
       >
         {/* Profile header */}
         <View style={styles.profileHeader}>
-          <View style={styles.avatar}>
-            <PiggyAvatar size={64} />
-          </View>
+          <TouchableOpacity
+            onPress={() => (navigation as any).navigate('Profile')}
+            activeOpacity={0.8}
+          >
+            <UserAvatar size={64} avatarUrl={user?.avatarUrl} />
+          </TouchableOpacity>
           <View style={styles.profileInfo}>
             <Text style={styles.name}>{fullName}</Text>
-            <Text style={styles.house}>Lekki Gardens Estate · Flat 4B</Text>
             {user?.residentId && (
-              <View style={styles.residentWrap}>
-                <Text style={styles.residentLabel}>Resident ID</Text>
-                <Text style={styles.residentId}>#{user.residentId}</Text>
-              </View>
+              <Text style={styles.house}>Resident ID: #{user.residentId}</Text>
             )}
           </View>
         </View>
@@ -346,9 +345,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 10,
+    width: '100%',
   },
   shortcutCard: {
-    width: '47.5%',
+    flexBasis: '48%',
+    flexGrow: 1,
     backgroundColor: Colors.white,
     borderRadius: Radius.card,
     borderWidth: 1.5,

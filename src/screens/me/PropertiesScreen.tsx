@@ -11,9 +11,9 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { useQuery } from '@tanstack/react-query';
-import { Colors, Typography, Layout, Radius } from '@/theme';
+import Svg, { Path } from 'react-native-svg';
+import { Colors, Typography, Layout, Radius, FontFamily } from '@/theme';
 import { api } from '@/api/client';
-import { formatNaira } from '@/utils/money';
 import { ScreenHeader } from '@/components/common/ScreenHeader';
 
 interface HouseholdSummary {
@@ -94,11 +94,6 @@ export function PropertiesScreen() {
                 <Text style={styles.propName}>{prop.name}</Text>
                 <Text style={styles.propMeta}>{prop.city} · {prop.role}</Text>
               </View>
-              <View style={styles.propRight}>
-                <Text style={styles.propDue}>{formatNaira(prop.dueThisMonth)}</Text>
-                <Text style={styles.propDueLabel}>due</Text>
-                <Text style={styles.propChevron}>{expandedId === prop.id ? '↑' : '↓'}</Text>
-              </View>
             </TouchableOpacity>
 
             {expandedId === prop.id && (
@@ -165,10 +160,6 @@ const styles = StyleSheet.create({
   propLeft: { flex: 1 },
   propName: { ...Typography.title, color: Colors.ink },
   propMeta: { ...Typography.caption, color: Colors.textSecondary, marginTop: 2 },
-  propRight: { alignItems: 'flex-end', gap: 2 },
-  propDue: { ...Typography.label, color: Colors.ink },
-  propDueLabel: { ...Typography.caption, color: Colors.textMuted },
-  propChevron: { fontSize: 16, color: Colors.textSecondary, marginTop: 4 },
   householdsSection: { borderTopWidth: 1, borderTopColor: Colors.line, padding: 14, gap: 10 },
   householdBlock: { gap: 6 },
   householdRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },

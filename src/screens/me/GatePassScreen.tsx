@@ -6,7 +6,8 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Colors, Typography, Layout, Radius } from '@/theme';
+import { Colors, Typography } from '@/theme';
+import { LockoMascot } from '@/components/icons/LockoMascot';
 import { ScreenHeader } from '@/components/common/ScreenHeader';
 
 export function GatePassScreen() {
@@ -14,8 +15,8 @@ export function GatePassScreen() {
     <SafeAreaView style={styles.safe} edges={['top']}>
       <ScreenHeader title="Gate pass" />
       <View style={styles.container}>
-        <View style={styles.mascot}>
-          <Text style={styles.mascotEmoji}>🎫</Text>
+        <View style={styles.mascotWrap}>
+          <LockoMascot width={100} height={120} />
         </View>
         <View style={styles.badge}>
           <Text style={styles.badgeText}>Coming soon</Text>
@@ -25,7 +26,7 @@ export function GatePassScreen() {
           Generate one-time OTP codes for visitors and guests. Guards can scan or verify codes at the gate.
         </Text>
         <TouchableOpacity style={styles.notifyBtn}>
-          <Text style={styles.notifyBtnText}>Notify me when it's ready</Text>
+          <Text style={styles.notifyBtnText}>Notify me</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -40,18 +41,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     padding: 32,
   },
-  mascot: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
-    backgroundColor: Colors.violetTint,
-    borderWidth: 2,
-    borderColor: Colors.ink,
+  mascotWrap: {
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 20,
   },
-  mascotEmoji: { fontSize: 40 },
   badge: {
     backgroundColor: Colors.violet,
     borderRadius: 99,
@@ -82,8 +76,8 @@ const styles = StyleSheet.create({
   notifyBtn: {
     backgroundColor: Colors.ink,
     borderRadius: 99,
-    paddingHorizontal: 24,
-    paddingVertical: 14,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
   },
-  notifyBtnText: { ...Typography.button, color: Colors.white },
+  notifyBtnText: { ...Typography.buttonSmall, color: Colors.white },
 });

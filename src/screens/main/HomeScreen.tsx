@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -8,7 +8,10 @@ import {
   RefreshControl,
   Modal,
   Pressable,
+  Animated,
 } from 'react-native';
+
+const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path, Circle, Ellipse, Rect } from 'react-native-svg';
 import { useNavigation } from '@react-navigation/native';
@@ -79,7 +82,7 @@ const MOCK_TENANT = {
 type BillState = 'overdue' | 'due' | 'upcoming' | 'partially_paid' | 'paid';
 
 // Unified bill shape used by the card stack
-type UnifiedBill = { id: string; title: string; state: BillState; dueDate: string; amountDue: number };
+type UnifiedBill = { id: string; title: string; subtitle?: string; state: BillState; dueDate: string; amountDue: number };
 
 const BILL_TONE: Record<BillState, { bg: string; text: string; dot: string }> = {
   overdue: { bg: Colors.overdueBg, text: Colors.clay, dot: Colors.clay },
@@ -276,51 +279,78 @@ function PropertySelectorModal({
 
 function BillCardStack({ bills, onPayPress }: { bills: UnifiedBill[]; onPayPress?: (id: string) => void }) {
   const [frontIdx, setFrontIdx] = useState(0);
+  const slideX = useRef(new Animated.Value(0)).current;
+  const slideY = useRef(new Animated.Value(0)).current;
+  const cardOpacity = useRef(new Animated.Value(1)).current;
   const n = bills.length;
 
   if (n === 0) return null;
 
+  const front = bills[frontIdx];
+  const second = n >= 2 ? bills[(frontIdx + 1) % n] : null;
+  const third = n >= 3 ? bills[(frontIdx + 2) % n] : null;
+  const frontTone = BILL_TONE[front.state];
+
+  const advance = () => {
+    if (n <= 1) return;
+    Animated.parallel([
+      Animated.timing(slideX, { toValue: 420, duration: 260, useNativeDriver: true }),
+      Animated.timing(slideY, { toValue: -20, duration: 260, useNativeDriver: true }),
+      Animated.timing(cardOpacity, { toValue: 0, duration: 200, useNativeDriver: true }),
+    ]).start(() => {
+      setFrontIdx((p) => (p + 1) % n);
+      slideX.setValue(0);
+      slideY.setValue(0);
+      cardOpacity.setValue(1);
+    });
+  };
+
   return (
     <View style={styles.stackContainer}>
-      {bills.map((bill, i) => {
-        const offset = ((i - frontIdx) % n + n) % n;
-        if (offset >= 3) return null;
-        const scale = 1 - offset * 0.05;
-        const translateY = offset * 12;
-        const zIndex = n - offset;
-        const tone = BILL_TONE[bill.state];
-        return (
+      {/* 3rd card — furthest behind */}
+      {third && (
+        <View style={[styles.billCard, styles.billCardBack, {
+          zIndex: 1, backgroundColor: '#FFE8D6',
+          transform: [{ translateY: 22 }, { scale: 0.93 }],
+        }]} />
+      )}
+      {/* 2nd card */}
+      {second && (
+        <View style={[styles.billCard, styles.billCardBack, {
+          zIndex: 2, backgroundColor: '#FFF3E6',
+          transform: [{ translateY: 11 }, { scale: 0.965 }],
+        }]} />
+      )}
+      {/* Front card — animated */}
+      <AnimatedTouchable
+        activeOpacity={n > 1 ? 0.92 : 1}
+        onPress={n > 1 ? advance : undefined}
+        style={[styles.billCard, {
+          zIndex: 10, backgroundColor: '#FFF8F2',
+          transform: [{ translateX: slideX }, { translateY: slideY }],
+          opacity: cardOpacity,
+        }]}
+      >
+        <View style={styles.billCardTitleRow}>
+          <Text style={styles.billCardName} numberOfLines={1}>{front.title}</Text>
+          <View style={[styles.stateChip, { backgroundColor: frontTone.bg }]}>
+            <Text style={[styles.stateChipText, { color: frontTone.text }]}>{BILL_STATE_LABEL[front.state]}</Text>
+          </View>
+        </View>
+        <View style={styles.billCardMeta}>
+          <View style={{ alignItems: 'flex-end' }}>
+            <Text style={styles.billUnit}>{formatNaira(front.amountDue)}</Text>
+          </View>
+        </View>
+        {(front.state === 'overdue' || front.state === 'due') && (
           <TouchableOpacity
-            key={bill.id}
-            activeOpacity={offset === 0 ? 0.85 : 1}
-            style={[styles.billCard, { transform: [{ scale }, { translateY }], zIndex }]}
-            onPress={() => { if (offset === 0) setFrontIdx((frontIdx + 1) % n); }}
+            style={[styles.payNowBtn, { alignSelf: 'flex-end', paddingHorizontal: 16 }]}
+            onPress={(e) => { e.stopPropagation?.(); onPayPress?.(front.id); }}
           >
-            <View style={[styles.billCardAccent, { backgroundColor: tone.dot }]} />
-            <View style={styles.billCardTitleRow}>
-              <Text style={styles.billCardName} numberOfLines={1}>{bill.title}</Text>
-              <View style={[styles.stateChip, { backgroundColor: tone.bg }]}>
-                <Text style={[styles.stateChipText, { color: tone.text }]}>{BILL_STATE_LABEL[bill.state]}</Text>
-              </View>
-            </View>
-            <View style={styles.billCardMeta}>
-              <Text style={styles.billMetaText}>Due {fmtDate(bill.dueDate)}</Text>
-              <Text style={styles.billUnit}>{formatNaira(bill.amountDue)}</Text>
-            </View>
-            {offset === 0 && (bill.state === 'overdue' || bill.state === 'due') && (
-              <TouchableOpacity
-                style={[styles.payNowBtn, { alignSelf: 'flex-end', paddingHorizontal: 16 }]}
-                onPress={(e) => { e.stopPropagation?.(); onPayPress?.(bill.id); }}
-              >
-                <Text style={styles.payNowText}>Pay now</Text>
-              </TouchableOpacity>
-            )}
-            {offset === 0 && n > 1 && (
-              <Text style={styles.swipeHint}>{frontIdx + 1}/{n} · tap to see next</Text>
-            )}
+            <Text style={styles.payNowText}>Pay now</Text>
           </TouchableOpacity>
-        );
-      })}
+        )}
+      </AnimatedTouchable>
     </View>
   );
 }
@@ -347,11 +377,12 @@ export function HomeScreen() {
   const walletLabel = 'Wallet Balance';
   const walletAmount = MOCK_TENANT.walletBalance;
 
-  // Bills for the tinder stack — landlord bills adapted to unified shape
-  const landlordBills: UnifiedBill[] = MOCK_LANDLORD.bills.map(b => ({
-    id: b.id, title: b.title, state: b.state, dueDate: b.dueDate, amountDue: b.amountPerHousehold,
-  }));
-  const activeBills: UnifiedBill[] = paysSharedBills ? MOCK_TENANT.bills : landlordBills;
+  // Bill-type summary cards for the tinder stack
+  const activeBills: UnifiedBill[] = [
+    { id: 'shared', title: 'Shared bills', subtitle: '3 active bills', state: 'overdue', dueDate: '2026-10-05', amountDue: 2050000 },
+    { id: 'private', title: 'Private bills', subtitle: '1 active bill', state: 'due', dueDate: '2026-10-15', amountDue: 500000 },
+    { id: 'one_time', title: 'One-time bills', subtitle: '2 active bills', state: 'upcoming', dueDate: '2026-10-30', amountDue: 1200000 },
+  ];
 
   function fmtBillSub(billCat: 'shared' | 'one_time' | 'private', billTitle: string, billMonth: string) {
     if (billCat === 'shared') return `${billMonth} shared bill`;
@@ -473,20 +504,21 @@ export function HomeScreen() {
           </View>
         )}
 
-        {/* Bills — tinder stack, all roles */}
-        <SectionCard>
-          <SectionHead
-            title={isLandlordOrAgent ? 'Active bills' : 'My bills'}
-            onSeeAll={() => navigation.navigate('Bills')}
+
+        {/* Active bills stack — no card wrapper so back cards can overflow */}
+        <View style={styles.activeBillsSection}>
+          <Text style={styles.activeBillsTitle}>Upcoming bills</Text>
+          <BillCardStack
+            bills={activeBills}
+            onPayPress={(id) => navigation.navigate('BillDetail', { billId: id })}
           />
-          <BillCardStack bills={activeBills} onPayPress={(id) => navigation.navigate('BillDetail', { billId: id })} />
-        </SectionCard>
+        </View>
 
         {/* Recent payments — all roles */}
         <SectionCard>
           <SectionHead
             title={isLandlordOrAgent ? 'Recent payments' : 'My payments'}
-            onSeeAll={() => navigation.navigate('Levies')}
+            onSeeAll={() => navigation.navigate('Bills')}
           />
           {recentPayments.map((p, i) => (
             <View key={p.id}>
@@ -611,8 +643,12 @@ const styles = StyleSheet.create({
   },
   actionOutlineLabel: { ...Typography.buttonSmall, color: Colors.ink, fontSize: 12 },
 
+  // Active bills (no card wrapper)
+  activeBillsSection: { gap: 10, overflow: 'visible', marginTop: 8, marginBottom: -20 },
+  activeBillsTitle: { ...Typography.label, color: Colors.ink },
+
   // Section card
-  section: { backgroundColor: Colors.white, borderRadius: Radius.card, padding: 16, gap: 14 },
+  section: { backgroundColor: Colors.white, borderRadius: Radius.card, padding: 16, gap: 14, overflow: 'visible' },
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   sectionTitle: { ...Typography.label, color: Colors.ink },
   seeAllBtn: { flexDirection: 'row', alignItems: 'center', gap: 2 },
@@ -624,14 +660,14 @@ const styles = StyleSheet.create({
   stateChipText: { ...Typography.captionSmall },
 
   // Bill card stack
-  stackContainer: { height: 148, position: 'relative' },
+  stackContainer: { height: 180, position: 'relative', overflow: 'visible' },
   billCard: {
     position: 'absolute', top: 0, left: 0, right: 0,
     backgroundColor: Colors.white,
     borderRadius: Radius.cardSm,
-    borderWidth: 1, borderColor: Colors.line,
     padding: 14, gap: 8,
   },
+  billCardBack: { overflow: 'hidden' },
   billCardAccent: { position: 'absolute', top: 0, left: 0, width: 4, bottom: 0, borderTopLeftRadius: Radius.cardSm, borderBottomLeftRadius: Radius.cardSm },
   billCardTitleRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8, paddingLeft: 8 },
   billCardName: { ...Typography.label, color: Colors.ink, flex: 1 },
