@@ -180,6 +180,7 @@ const styles = StyleSheet.create({
   labelActive: {
     color: Colors.ink,
     fontFamily: 'Syne_800ExtraBold',
+    fontSize: 10,
   },
   labelInactive: {
     color: Colors.textMuted,

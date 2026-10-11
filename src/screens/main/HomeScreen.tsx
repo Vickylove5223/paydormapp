@@ -101,6 +101,13 @@ function fmtDate(iso: string) {
   return new Date(iso).toLocaleDateString('en-NG', { day: 'numeric', month: 'short' });
 }
 
+function fmtDateTime(iso: string) {
+  const d = new Date(iso);
+  const date = d.toLocaleDateString('en-NG', { day: 'numeric', month: 'short' });
+  const time = d.toLocaleTimeString('en-NG', { hour: 'numeric', minute: '2-digit', hour12: true });
+  return `${date} · ${time}`;
+}
+
 // ── SVG icons ──────────────────────────────────────────────────────────────────
 
 function BellIcon() {
@@ -131,10 +138,10 @@ function PlusIcon({ color = Colors.white }: { color?: string }) {
   );
 }
 
-function BuildingIcon() {
+function BuildingIcon({ color = Colors.ink }: { color?: string }) {
   return (
     <Svg width={18} height={18} viewBox="0 0 24 24" fill="none">
-      <Path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-4h6v4M9 11h2M13 11h2M9 15h2M13 15h2" stroke={Colors.ink} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" />
+      <Path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-4h6v4M9 11h2M13 11h2M9 15h2M13 15h2" stroke={color} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" />
     </Svg>
   );
 }
@@ -148,7 +155,7 @@ function PersonAddIcon() {
   );
 }
 
-function DefaultAvatarIcon({ size = 24 }: { size?: number }) {
+function DefaultAvatarIcon({ size = 40 }: { size?: number }) {
   return (
     <Svg width={size} height={size} viewBox="15 28 90 75">
       <Path d="M36 58L30 40L48 50Z" fill="#A98BFF" stroke="#0C1822" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" />
@@ -209,6 +216,53 @@ function Divider() {
   return <View style={styles.divider} />;
 }
 
+// ── Bill card stack (tinder-style) ────────────────────────────────────────────
+
+function BillCardStack({ bills }: { bills: typeof MOCK_LANDLORD.bills }) {
+  const [frontIdx, setFrontIdx] = useState(0);
+  const n = bills.length;
+
+  return (
+    <View style={styles.stackContainer}>
+      {bills.map((bill, i) => {
+        const offset = ((i - frontIdx) % n + n) % n;
+        if (offset >= 3) return null;
+        const scale = 1 - offset * 0.05;
+        const translateY = offset * 12;
+        const zIndex = n - offset;
+        const tone = BILL_TONE[bill.state];
+        const pct = bill.totalCount > 0 ? bill.paidCount / bill.totalCount : 0;
+        return (
+          <TouchableOpacity
+            key={bill.id}
+            activeOpacity={offset === 0 ? 0.85 : 1}
+            style={[styles.billCard, { transform: [{ scale }, { translateY }], zIndex }]}
+            onPress={() => { if (offset === 0) setFrontIdx((frontIdx + 1) % n); }}
+          >
+            <View style={[styles.billCardAccent, { backgroundColor: tone.dot }]} />
+            <View style={styles.billCardTitleRow}>
+              <Text style={styles.billCardName} numberOfLines={1}>{bill.title}</Text>
+              <View style={[styles.stateChip, { backgroundColor: tone.bg }]}>
+                <Text style={[styles.stateChipText, { color: tone.text }]}>{BILL_STATE_LABEL[bill.state]}</Text>
+              </View>
+            </View>
+            <View style={styles.billCardMeta}>
+              <Text style={styles.billMetaText}>{bill.paidCount}/{bill.totalCount} paid · Due {fmtDate(bill.dueDate)}</Text>
+              <Text style={styles.billUnit}>{formatNaira(bill.amountPerHousehold)}/unit</Text>
+            </View>
+            <View style={styles.barBg}>
+              <View style={[styles.barFill, { width: `${Math.round(pct * 100)}%` as any }]} />
+            </View>
+            {offset === 0 && n > 1 && (
+              <Text style={styles.swipeHint}>{frontIdx + 1}/{n} · tap to see next</Text>
+            )}
+          </TouchableOpacity>
+        );
+      })}
+    </View>
+  );
+}
+
 // ── Landlord/Agent view ────────────────────────────────────────────────────────
 
 function LandlordHome({ navigation }: { navigation: any }) {
@@ -258,38 +312,10 @@ function LandlordHome({ navigation }: { navigation: any }) {
         </TouchableOpacity>
       </View>
 
-      {/* Bills section */}
+      {/* Bills section — tinder stack */}
       <SectionCard>
         <SectionHead title="Active bills" onSeeAll={() => navigation.navigate('Bills')} />
-        {d.bills.map((bill, i) => {
-          const tone = BILL_TONE[bill.state];
-          const pct = bill.totalCount > 0 ? bill.paidCount / bill.totalCount : 0;
-          return (
-            <View key={bill.id}>
-              {i > 0 && <Divider />}
-              <View style={styles.billRow}>
-                <View style={[styles.billDot, { backgroundColor: tone.dot }]} />
-                <View style={styles.billInfo}>
-                  <View style={styles.billTitleRow}>
-                    <Text style={styles.billName} numberOfLines={1}>{bill.title}</Text>
-                    <View style={[styles.stateChip, { backgroundColor: tone.bg }]}>
-                      <Text style={[styles.stateChipText, { color: tone.text }]}>
-                        {BILL_STATE_LABEL[bill.state]}
-                      </Text>
-                    </View>
-                  </View>
-                  <View style={styles.billMeta}>
-                    <Text style={styles.billMetaText}>{bill.paidCount}/{bill.totalCount} paid · Due {fmtDate(bill.dueDate)}</Text>
-                    <Text style={styles.billUnit}>{formatNaira(bill.amountPerHousehold)}/unit</Text>
-                  </View>
-                  <View style={styles.barBg}>
-                    <View style={[styles.barFill, { width: `${Math.round(pct * 100)}%` as any }]} />
-                  </View>
-                </View>
-              </View>
-            </View>
-          );
-        })}
+        <BillCardStack bills={d.bills} />
       </SectionCard>
 
       {/* Recent payments */}
@@ -301,16 +327,13 @@ function LandlordHome({ navigation }: { navigation: any }) {
               {i > 0 && <Divider />}
               <View style={styles.paymentRow}>
                 <View style={styles.avatar}>
-                  <DefaultAvatarIcon size={22} />
+                  <DefaultAvatarIcon size={40} />
                 </View>
                 <View style={styles.paymentInfo}>
                   <Text style={styles.paymentName}>{p.tenantName}</Text>
-                  <Text style={styles.paymentSub}>{p.billTitle} · {p.household}</Text>
+                  <Text style={styles.paymentSub}>{fmtDateTime(p.createdAt)}</Text>
                 </View>
-                <View style={styles.paymentRight}>
-                  <Text style={styles.paymentAmount}>{formatNaira(p.amount)}</Text>
-                  <Text style={styles.paymentTime}>{timeAgoShort(p.createdAt)}</Text>
-                </View>
+                <Text style={styles.paymentAmount}>{formatNaira(p.amount)}</Text>
               </View>
             </View>
           );
@@ -336,34 +359,35 @@ function TenantHome({ navigation }: { navigation: any }) {
             <Text style={styles.overviewAmount}>{formatNaira(d.walletBalance)}</Text>
           </View>
           <TouchableOpacity style={styles.topupBtn} activeOpacity={0.75}>
-            <PlusIcon color={Colors.green} />
+            <PlusIcon color={Colors.white} />
             <Text style={styles.topupText}>Topup Wallet</Text>
           </TouchableOpacity>
         </View>
 
         {/* Green community bills nested card */}
         <View style={styles.communityCard}>
-          {/* Header row: icon + title | paid count + avatars */}
-          <View style={styles.communityHeaderRow}>
-            <View style={styles.communityTitleRow}>
-              <BuildingIcon />
-              <Text style={styles.communityTitle}>Shared Community Bills</Text>
+          {/* Header: icon + title */}
+          <View style={styles.communityTitleRow}>
+            <View style={styles.communityIconCircle}>
+              <BuildingIcon color="#fff" />
+            </View>
+            <Text style={styles.communityTitle}>Shared Community Bills</Text>
+          </View>
+
+          {/* Total + paid count */}
+          <View style={styles.communityAmountRow}>
+            <View>
+              <Text style={styles.communityLabel}>Total</Text>
+              <Text style={styles.communityTotalAmount}>{formatNaira(d.communityBills.total)}</Text>
             </View>
             <View style={styles.paidBadge}>
-              {/* Mini avatar stack */}
+              <Text style={styles.paidCountText}>{d.communityBills.paidCount} of {d.communityBills.totalCount} paid</Text>
               <View style={styles.avatarStack}>
                 {['#A98BFF', '#40CE86', '#F6A935'].slice(0, Math.min(d.communityBills.paidCount, 3)).map((color, i) => (
                   <View key={i} style={[styles.miniAvatar, { backgroundColor: color, marginLeft: i > 0 ? -6 : 0, zIndex: 3 - i }]} />
                 ))}
               </View>
-              <Text style={styles.paidCountText}>{d.communityBills.paidCount} of {d.communityBills.totalCount} paid</Text>
             </View>
-          </View>
-
-          {/* Total amount */}
-          <View style={styles.communityAmountRow}>
-            <Text style={styles.communityLabel}>Total</Text>
-            <Text style={styles.communityTotalAmount}>{formatNaira(d.communityBills.total)}</Text>
           </View>
 
           <View style={styles.communityDivider} />
@@ -595,11 +619,27 @@ const styles = StyleSheet.create({
   },
   payNowText: { ...Typography.captionSmall, color: Colors.green },
 
+  // Bill card stack
+  stackContainer: { height: 148, position: 'relative' },
+  billCard: {
+    position: 'absolute', top: 0, left: 0, right: 0,
+    backgroundColor: Colors.white,
+    borderRadius: Radius.cardSm,
+    borderWidth: 1, borderColor: Colors.line,
+    padding: 14, gap: 8,
+  },
+  billCardAccent: { position: 'absolute', top: 0, left: 0, width: 4, bottom: 0, borderTopLeftRadius: Radius.cardSm, borderBottomLeftRadius: Radius.cardSm },
+  billCardTitleRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8, paddingLeft: 8 },
+  billCardName: { ...Typography.label, color: Colors.ink, flex: 1 },
+  billCardMeta: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingLeft: 8 },
+  swipeHint: { ...Typography.captionSmall, color: Colors.textMuted, textAlign: 'right', paddingLeft: 8 },
+
   // Payment rows (shared)
   paymentRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   avatar: {
     width: 40, height: 40, borderRadius: 20,
-    backgroundColor: Colors.mint, borderWidth: 1.5, borderColor: Colors.line,
+    overflow: 'hidden',
+    borderWidth: 1.5, borderColor: Colors.line,
     alignItems: 'center', justifyContent: 'center', flexShrink: 0,
   },
   avatarText: { ...Typography.label, color: Colors.ink },
@@ -613,29 +653,33 @@ const styles = StyleSheet.create({
   // Tenant wallet row inside overview card
   walletRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 },
   topupBtn: {
-    flexDirection: 'row', alignItems: 'center', gap: 5,
-    borderWidth: 1.5, borderColor: Colors.green, borderRadius: 99,
-    paddingHorizontal: 12, paddingVertical: 7, marginTop: 4,
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    backgroundColor: 'rgba(255,255,255,0.12)', borderRadius: 99,
+    paddingHorizontal: 14, paddingVertical: 9, marginTop: 4,
   },
-  topupText: { ...Typography.captionSmall, color: Colors.green, fontFamily: 'DMSans_700Bold' },
+  topupText: { ...Typography.captionSmall, color: Colors.white, fontFamily: 'DMSans_700Bold' },
 
   // Green community bills card
   communityCard: {
-    backgroundColor: Colors.mint,
+    backgroundColor: Colors.green,
     borderRadius: Radius.cardSm,
     padding: 14,
     gap: 10,
   },
-  communityHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  communityTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 },
+  communityIconCircle: {
+    width: 32, height: 32, borderRadius: 16,
+    backgroundColor: 'rgba(12,24,34,0.25)',
+    alignItems: 'center', justifyContent: 'center',
+  },
+  communityTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   communityTitle: { ...Typography.label, color: Colors.ink, fontSize: 13 },
-  paidBadge: { flexDirection: 'row', alignItems: 'center', gap: 5 },
+  paidBadge: { alignItems: 'flex-end', gap: 4 },
   avatarStack: { flexDirection: 'row', alignItems: 'center' },
-  miniAvatar: { width: 18, height: 18, borderRadius: 9, borderWidth: 1.5, borderColor: Colors.mint },
+  miniAvatar: { width: 18, height: 18, borderRadius: 9, borderWidth: 1.5, borderColor: Colors.green },
   paidCountText: { ...Typography.captionSmall, color: Colors.textSecondary },
   communityAmountRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  communityLabel: { ...Typography.captionSmall, color: Colors.textMuted },
-  communityTotalAmount: { ...Typography.buttonSmall, color: Colors.ink },
+  communityLabel: { ...Typography.captionSmall, color: 'rgba(12,24,34,0.6)' },
+  communityTotalAmount: { ...Typography.amountLarge, color: Colors.ink, fontSize: 28, lineHeight: 34 },
   communityDivider: { height: 1, backgroundColor: 'rgba(12,24,34,0.08)' },
   communityFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   communityOweAmount: { ...Typography.label, color: Colors.ink, marginTop: 2 },

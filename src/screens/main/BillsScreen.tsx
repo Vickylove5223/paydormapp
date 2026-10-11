@@ -21,17 +21,54 @@ import { CardSkeleton } from '@/components/common/SkeletonLoader';
 import { EmptyState } from '@/components/common/EmptyState';
 import { Button } from '@/components/common/Button';
 
+const MOCK_BILLS: Bill[] = [
+  {
+    id: 'b1', type: 'electricity', title: 'August EKEDC',
+    totalAmount: 1200000, dueDate: '2026-10-05', state: 'overdue',
+    period: '2026-08',
+  },
+  {
+    id: 'b2', type: 'service_charge', title: 'October Service Charge',
+    totalAmount: 500000, dueDate: '2026-10-15', state: 'due',
+    period: '2026-10',
+  },
+  {
+    id: 'b3', type: 'water', title: 'Water Supply — Q4',
+    totalAmount: 350000, dueDate: '2026-10-30', state: 'upcoming',
+    period: '2026-10',
+  },
+  {
+    id: 'b4', type: 'security', title: 'Security Levy',
+    totalAmount: 200000, dueDate: '2026-10-20', state: 'upcoming',
+    period: '2026-10',
+  },
+  {
+    id: 'b5', type: 'internet', title: 'Estate Wi-Fi — October',
+    totalAmount: 150000, dueDate: '2026-10-01', state: 'paid',
+    period: '2026-10',
+  },
+  {
+    id: 'b6', type: 'electricity', title: 'July EKEDC',
+    totalAmount: 1100000, dueDate: '2026-09-05', state: 'paid',
+    period: '2026-07',
+  },
+];
+
 export function BillsScreen() {
   const navigation = useNavigation<any>();
   const { activePropertyId, role, privateMode } = useAppStore();
 
   const canAddBill = role === 'master_tenant' || role === 'landlord' || role === 'agent';
 
-  const { data: bills = [], isLoading, refetch, isRefetching } = useQuery({
+  const { data: apiBills = [], isLoading: apiLoading, refetch, isRefetching } = useQuery({
     queryKey: ['bills', activePropertyId],
     queryFn: () =>
       api.get<Bill[]>(`/bills?propertyId=${activePropertyId ?? ''}`),
+    enabled: false,
   });
+
+  const bills = apiBills.length > 0 ? apiBills : MOCK_BILLS;
+  const isLoading = false;
 
   const grouped = groupBills(bills);
 

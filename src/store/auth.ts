@@ -18,7 +18,7 @@ const MOCK_USER: User = {
   firstName: 'Adewale',
   lastName: 'Okonkwo',
   whatsappNumber: '+2348000000000',
-  residentId: 'mock-resident-1',
+  residentId: 'PD-84729',
   createdAt: '2026-01-01T00:00:00Z',
 };
 

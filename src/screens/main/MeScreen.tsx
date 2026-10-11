@@ -261,7 +261,7 @@ export function MeScreen() {
             <Text style={styles.house}>Lekki Gardens Estate · Flat 4B</Text>
             {user?.residentId && (
               <View style={styles.residentBadge}>
-                <Text style={styles.residentId}>{user.residentId}</Text>
+                <Text style={styles.residentId}>#{user.residentId}</Text>
               </View>
             )}
           </View>
