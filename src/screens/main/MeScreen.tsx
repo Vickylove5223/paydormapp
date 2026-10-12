@@ -1,11 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Alert,
+  Modal,
+  Pressable,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path, Circle, Rect, Ellipse, Line } from 'react-native-svg';
@@ -34,6 +35,38 @@ function PiggyAvatar({ size = 64 }: { size?: number }) {
       <Circle cx={65} cy={88} r={2} fill="#0C1822" />
       <Circle cx={34} cy={82} r={3.6} fill="#40CE86" opacity={0.8} />
       <Circle cx={86} cy={82} r={3.6} fill="#40CE86" opacity={0.8} />
+    </Svg>
+  );
+}
+
+function SadPiggyMascot({ size = 90 }: { size?: number }) {
+  return (
+    <Svg width={size} height={size} viewBox="15 28 90 75">
+      {/* Ears */}
+      <Path d="M36 58L30 40L48 50Z" fill="#A98BFF" stroke="#0C1822" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" />
+      <Path d="M84 58L90 40L72 50Z" fill="#A98BFF" stroke="#0C1822" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" />
+      {/* Coin slot top (red = danger) */}
+      <Circle cx={60} cy={38} r={9} fill="#EF4444" stroke="#0C1822" strokeWidth={2} />
+      <Path d="M55 38h10" stroke="#0C1822" strokeWidth={2} strokeLinecap="round" />
+      {/* Body */}
+      <Ellipse cx={60} cy={78} rx={38} ry={30} fill="#A98BFF" stroke="#0C1822" strokeWidth={2.2} />
+      {/* Sad eyes */}
+      <Path d="M50 50h20" stroke="#0C1822" strokeWidth={3} strokeLinecap="round" />
+      {/* Legs */}
+      <Rect x={37} y={64} width={15} height={10} rx={2.5} fill="#0C1822" />
+      <Rect x={64} y={64} width={15} height={10} rx={2.5} fill="#0C1822" />
+      <Path d="M52 68H64" stroke="#0C1822" strokeWidth={2} />
+      {/* Snout */}
+      <Ellipse cx={60} cy={88} rx={13} ry={9} fill="#F9A8D4" stroke="#0C1822" strokeWidth={2.2} />
+      <Circle cx={55} cy={88} r={2} fill="#0C1822" />
+      <Circle cx={65} cy={88} r={2} fill="#0C1822" />
+      {/* Sad mouth */}
+      <Path d="M54 93 Q60 90 66 93" stroke="#0C1822" strokeWidth={1.8} strokeLinecap="round" fill="none" />
+      {/* Cheeks */}
+      <Circle cx={34} cy={82} r={3.6} fill="#F9A8D4" opacity={0.8} />
+      <Circle cx={86} cy={82} r={3.6} fill="#F9A8D4" opacity={0.8} />
+      {/* Tear drop */}
+      <Path d="M46 72 Q44 76 46 79 Q48 76 46 72Z" fill="#93C5FD" opacity={0.9} />
     </Svg>
   );
 }
@@ -218,23 +251,20 @@ export function MeScreen() {
   const user = useAuthStore((s) => s.user);
   const clearAuth = useAuthStore((s) => s.clearAuth);
   const clearContext = useAppStore((s) => s.clearContext);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   const handleMenuPress = (route: string) => {
     if (route === 'logout') {
-      Alert.alert('Log out', 'Are you sure you want to log out?', [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Log out',
-          style: 'destructive',
-          onPress: () => {
-            clearAuth();
-            clearContext();
-          },
-        },
-      ]);
+      setShowLogoutModal(true);
       return;
     }
     navigation.navigate(route);
+  };
+
+  const handleConfirmLogout = () => {
+    setShowLogoutModal(false);
+    clearAuth();
+    clearContext();
   };
 
   const fullName = user ? `${user.firstName} ${user.lastName}` : 'Your name';
@@ -310,6 +340,26 @@ export function MeScreen() {
           })}
         </View>
       </ScrollView>
+
+      <Modal visible={showLogoutModal} transparent animationType="fade" onRequestClose={() => setShowLogoutModal(false)}>
+        <Pressable style={styles.modalOverlay} onPress={() => setShowLogoutModal(false)}>
+          <Pressable style={styles.modalCard} onPress={() => {}}>
+            <View style={styles.modalMascot}>
+              <SadPiggyMascot size={90} />
+            </View>
+            <Text style={styles.modalTitle}>Log out?</Text>
+            <Text style={styles.modalWarning}>You'll need to sign back in to access your account and bills.</Text>
+            <View style={styles.modalActions}>
+              <TouchableOpacity style={styles.modalCancelBtn} onPress={() => setShowLogoutModal(false)} activeOpacity={0.8}>
+                <Text style={styles.modalCancelText}>Stay in</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.modalLogoutBtn} onPress={handleConfirmLogout} activeOpacity={0.8}>
+                <Text style={styles.modalLogoutText}>Log out</Text>
+              </TouchableOpacity>
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -392,4 +442,27 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.line,
     marginHorizontal: 16,
   },
+
+  modalOverlay: {
+    flex: 1, backgroundColor: 'rgba(12,24,34,0.55)',
+    alignItems: 'center', justifyContent: 'center', padding: 24,
+  },
+  modalCard: {
+    backgroundColor: Colors.white, borderRadius: 24,
+    padding: 24, alignItems: 'center', width: '100%', gap: 8,
+  },
+  modalMascot: { marginBottom: 4 },
+  modalTitle: { fontFamily: 'Syne_800ExtraBold', fontSize: 22, color: Colors.ink, textAlign: 'center' },
+  modalWarning: { ...Typography.caption, color: Colors.textSecondary, textAlign: 'center', lineHeight: 18, marginBottom: 8 },
+  modalActions: { flexDirection: 'row', gap: 10, width: '100%', marginTop: 4 },
+  modalCancelBtn: {
+    flex: 1, paddingVertical: 14, borderRadius: Radius.cardSm,
+    borderWidth: 1.5, borderColor: Colors.line, alignItems: 'center',
+  },
+  modalCancelText: { fontFamily: 'Syne_800ExtraBold', fontSize: 14, color: Colors.ink },
+  modalLogoutBtn: {
+    flex: 1, paddingVertical: 14, borderRadius: Radius.cardSm,
+    backgroundColor: '#EF4444', alignItems: 'center',
+  },
+  modalLogoutText: { fontFamily: 'Syne_800ExtraBold', fontSize: 14, color: Colors.white },
 });

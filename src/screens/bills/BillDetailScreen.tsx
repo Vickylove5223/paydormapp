@@ -418,15 +418,11 @@ export function BillDetailScreen({ route, navigation }: Props) {
 
   const bill = {
     ...mockData.bill,
-    ...(passedBillData
-      ? {
-          title: passedBillData.title,
-          totalAmount: passedBillData.totalAmount,
-          dueDate: passedBillData.dueDate,
-          period: passedBillData.period,
-          type: passedBillData.type,
-        }
-      : {}),
+    ...(passedBillData?.title !== undefined ? { title: passedBillData.title } : {}),
+    ...(passedBillData?.totalAmount !== undefined ? { totalAmount: passedBillData.totalAmount } : {}),
+    ...(passedBillData?.dueDate !== undefined ? { dueDate: passedBillData.dueDate } : {}),
+    ...(passedBillData?.period !== undefined ? { period: passedBillData.period } : {}),
+    ...(passedBillData?.type !== undefined ? { type: passedBillData.type } : {}),
     state: billState,
   };
 

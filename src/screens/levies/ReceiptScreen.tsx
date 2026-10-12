@@ -220,5 +220,5 @@ const styles = StyleSheet.create({
   receiptActionText: {
     ...Typography.label, color: Colors.white, fontFamily: 'Syne_800ExtraBold', fontSize: 11,
   },
-  footer: { textAlign: 'center', fontSize: 11, color: 'rgba(12,24,34,0.4)', marginTop: 12, fontFamily: FontFamily.dmSans },
+  footer: { textAlign: 'center', fontSize: 11, color: 'rgba(12,24,34,0.4)', marginTop: 12, fontFamily: FontFamily.dmSansRegular },
 });

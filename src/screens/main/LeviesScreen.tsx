@@ -836,27 +836,29 @@ export function LeviesScreen() {
             <Text style={styles.drawerTitle}>What type of bill?</Text>
             <Text style={styles.drawerSub}>Choose how this bill will be assigned</Text>
             <View style={styles.drawerList}>
-              {BILL_TYPE_OPTIONS.map((opt) => (
-                <TouchableOpacity
-                  key={opt.scope}
-                  style={styles.drawerRow}
-                  activeOpacity={0.75}
-                  onPress={() => {
-                    setShowAddDrawer(false);
-                    navigation.navigate('AddBill', { scope: opt.scope });
-                  }}
-                >
-                  <View style={[styles.drawerRowIcon, { backgroundColor: opt.iconBg }]}>
-                    <opt.icon />
-                  </View>
-                  <View style={styles.drawerRowInfo}>
-                    <Text style={styles.drawerRowLabel}>{opt.label}</Text>
-                    <Text style={styles.drawerRowSub}>{opt.sub}</Text>
-                  </View>
-                  <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
-                    <Path d="M9 18l6-6-6-6" stroke={Colors.textMuted} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
-                  </Svg>
-                </TouchableOpacity>
+              {BILL_TYPE_OPTIONS.map((opt, i) => (
+                <React.Fragment key={opt.scope}>
+                  {i > 0 && <View style={styles.drawerDivider} />}
+                  <TouchableOpacity
+                    style={styles.drawerRow}
+                    activeOpacity={0.75}
+                    onPress={() => {
+                      setShowAddDrawer(false);
+                      navigation.navigate('AddBill', { scope: opt.scope });
+                    }}
+                  >
+                    <View style={[styles.drawerRowIcon, { backgroundColor: opt.iconBg }]}>
+                      <opt.icon />
+                    </View>
+                    <View style={styles.drawerRowInfo}>
+                      <Text style={styles.drawerRowLabel}>{opt.label}</Text>
+                      <Text style={styles.drawerRowSub}>{opt.sub}</Text>
+                    </View>
+                    <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
+                      <Path d="M9 18l6-6-6-6" stroke={Colors.textMuted} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+                    </Svg>
+                  </TouchableOpacity>
+                </React.Fragment>
               ))}
             </View>
           </View>
@@ -1111,11 +1113,11 @@ const styles = StyleSheet.create({
   },
   drawerTitle: { ...Typography.h2, color: Colors.ink, marginBottom: 4 },
   drawerSub: { ...Typography.caption, color: Colors.textSecondary, marginBottom: 20 },
-  drawerList: { gap: 10 },
+  drawerList: {},
+  drawerDivider: { height: 1, backgroundColor: Colors.line },
   drawerRow: {
     flexDirection: 'row', alignItems: 'center', gap: 12,
-    backgroundColor: Colors.screen, borderRadius: Radius.cardSm,
-    borderWidth: 1, borderColor: Colors.line, padding: 14,
+    paddingVertical: 14,
   },
   drawerRowIcon: {
     width: 44, height: 44, borderRadius: 12,

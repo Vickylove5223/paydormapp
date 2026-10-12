@@ -4,6 +4,7 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
+  Pressable,
   ScrollView,
   RefreshControl,
 } from 'react-native';
@@ -248,28 +249,21 @@ interface SummaryCardProps {
   iconBg: string;
   expanded: boolean;
   onToggle: () => void;
-  onHeaderPress?: () => void;
 }
 
-function SummaryCard({ title, total, paidCount, totalCount, bg, textColor, subColor, icon, iconBg, expanded, onToggle, onHeaderPress }: SummaryCardProps) {
+function SummaryCard({ title, total, paidCount, totalCount, bg, textColor, subColor, icon, iconBg, expanded, onToggle }: SummaryCardProps) {
   return (
-    <View style={[styles.summaryCard, expanded && { backgroundColor: '#E6F8EE' }]}>
-      <TouchableOpacity
-        style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10 }}
-        activeOpacity={0.85}
-        onPress={onHeaderPress ?? onToggle}
-      >
-        <View style={[styles.summaryIconWrap, { backgroundColor: iconBg }]}>{icon}</View>
-        <View style={styles.summaryInfo}>
-          <Text style={styles.summaryTitle}>{title}</Text>
-          <Text style={styles.summaryPaid}>{paidCount} of {totalCount} paid</Text>
-        </View>
-      </TouchableOpacity>
-      <TouchableOpacity style={styles.summaryRight} activeOpacity={0.7} onPress={onToggle} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+    <TouchableOpacity style={[styles.summaryCard, expanded && { backgroundColor: '#E6F8EE' }]} activeOpacity={0.85} onPress={onToggle}>
+      <View style={[styles.summaryIconWrap, { backgroundColor: iconBg }]}>{icon}</View>
+      <View style={styles.summaryInfo}>
+        <Text style={styles.summaryTitle}>{title}</Text>
+        <Text style={styles.summaryPaid}>{paidCount} of {totalCount} paid</Text>
+      </View>
+      <View style={styles.summaryRight}>
         <Text style={styles.summaryTotal}>{formatNaira(total)}</Text>
         <Chevron open={expanded} />
-      </TouchableOpacity>
-    </View>
+      </View>
+    </TouchableOpacity>
   );
 }
 
@@ -395,14 +389,17 @@ export function BillsScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* Month picker calendar */}
+      {/* Month picker calendar + outside-tap backdrop */}
       {pickerOpen && (
-        <MonthCalendar
-          availableMonths={allAvailableMonths}
-          selectedMonth={selectedMonth}
-          onSelect={(m) => { setSelectedMonth(m); setPickerOpen(false); }}
-          onClear={() => { setSelectedMonth(null); setPickerOpen(false); }}
-        />
+        <>
+          <Pressable style={StyleSheet.absoluteFill} onPress={() => setPickerOpen(false)} />
+          <MonthCalendar
+            availableMonths={allAvailableMonths}
+            selectedMonth={selectedMonth}
+            onSelect={(m) => { setSelectedMonth(m); setPickerOpen(false); }}
+            onClear={() => { setSelectedMonth(null); setPickerOpen(false); }}
+          />
+        </>
       )}
 
       <ScrollView
@@ -454,7 +451,6 @@ export function BillsScreen() {
                     iconBg={Colors.screen}
                     expanded={!!expanded[sharedKey]}
                     onToggle={() => toggle(sharedKey)}
-                    onHeaderPress={() => navigation.navigate('BillDetail', { billId: 'shared-compound', billData: { category: 'shared' } })}
                   />
                   {expanded[sharedKey] && shared.map(item => (
                     <View key={item.id}>
@@ -480,7 +476,6 @@ export function BillsScreen() {
                     iconBg={Colors.screen}
                     expanded={!!expanded[oneTimeKey]}
                     onToggle={() => toggle(oneTimeKey)}
-                    onHeaderPress={() => navigation.navigate('BillDetail', { billId: oneTime[0]?.id ?? 'ot1', billData: { category: 'one_time' } })}
                   />
                   {expanded[oneTimeKey] && oneTime.map(item => (
                     <View key={item.id}>
@@ -506,7 +501,6 @@ export function BillsScreen() {
                     iconBg={Colors.screen}
                     expanded={!!expanded[privKey]}
                     onToggle={() => toggle(privKey)}
-                    onHeaderPress={() => navigation.navigate('BillDetail', { billId: 'private-all', billData: { category: 'private' } })}
                   />
                   {expanded[privKey] && priv.map(item => (
                     <View key={item.id}>
@@ -532,7 +526,6 @@ export function BillsScreen() {
                     iconBg={Colors.screen}
                     expanded={!!expanded[copartnerKey]}
                     onToggle={() => toggle(copartnerKey)}
-                    onHeaderPress={() => navigation.navigate('BillDetail', { billId: copartner[0]?.id ?? 'cp0', billData: { category: 'copartner' } })}
                   />
                   {expanded[copartnerKey] && copartner.map(item => (
                     <View key={item.id}>

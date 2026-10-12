@@ -5,6 +5,7 @@ import { MeScreen } from '@/screens/main/MeScreen';
 import { ProfileScreen } from '@/screens/me/ProfileScreen';
 import { PayoutAccountScreen } from '@/screens/me/PayoutAccountScreen';
 import { WalletScreen } from '@/screens/me/WalletScreen';
+import { WalletReceiptScreen } from '@/screens/me/WalletReceiptScreen';
 import { CoPartnerScreen } from '@/screens/me/CoPartnerScreen';
 import { PropertiesScreen } from '@/screens/me/PropertiesScreen';
 import { AddPropertyScreen } from '@/screens/me/AddPropertyScreen';
@@ -24,6 +25,7 @@ export function MeNavigator() {
       <Stack.Screen name="Profile" component={ProfileScreen} />
       <Stack.Screen name="PayoutAccount" component={PayoutAccountScreen} />
       <Stack.Screen name="Wallet" component={WalletScreen} />
+      <Stack.Screen name="WalletReceipt" component={WalletReceiptScreen} />
       <Stack.Screen name="CoPartner" component={CoPartnerScreen} />
       <Stack.Screen name="Properties" component={PropertiesScreen} />
       <Stack.Screen name="AddProperty" component={AddPropertyScreen} />

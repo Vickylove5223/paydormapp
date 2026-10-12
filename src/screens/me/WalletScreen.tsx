@@ -19,7 +19,10 @@ import { formatFullDateTime } from '@/utils/date';
 import { ScreenHeader } from '@/components/common/ScreenHeader';
 import { Button } from '@/components/common/Button';
 import { BankFavicon } from '@/components/common/BankFavicon';
-import Svg, { Path } from 'react-native-svg';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { MeStackParams } from '@/navigation/types';
+import Svg, { Path, Rect } from 'react-native-svg';
 
 interface LocalTransaction {
   id: string;
@@ -56,15 +59,25 @@ function TopUpModal({
   visible,
   onClose,
   onConfirm,
+  onSuccess,
 }: {
   visible: boolean;
   onClose: () => void;
   onConfirm: (amount: number) => void;
+  onSuccess: (data: {
+    title: string;
+    subtitle: string;
+    amount: number;
+    bankName: string;
+    accountNumber: string;
+    accountName: string;
+    txRef: string;
+    status: string;
+  }) => void;
 }) {
-  const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [step, setStep] = useState<1 | 2>(1);
   const [amount, setAmount] = useState('');
   const [seconds, setSeconds] = useState(TOPUP_DURATION);
-  const [txRef, setTxRef] = useState('');
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
@@ -82,7 +95,7 @@ function TopUpModal({
 
   const handleClose = () => {
     if (timerRef.current) clearInterval(timerRef.current);
-    setStep(1); setAmount(''); setSeconds(TOPUP_DURATION); setTxRef('');
+    setStep(1); setAmount(''); setSeconds(TOPUP_DURATION);
     onClose();
   };
 
@@ -96,9 +109,20 @@ function TopUpModal({
     const n = Number(amount.replace(/,/g, ''));
     if (timerRef.current) clearInterval(timerRef.current);
     const ref = `PD-${Math.floor(10000000 + Math.random() * 90000000)}`;
-    setTxRef(ref);
-    onConfirm(n * 100);
-    setStep(3);
+    const amtKobo = n * 100;
+    const formattedAmount = Number(amount).toLocaleString();
+    onConfirm(amtKobo);
+    handleClose();
+    onSuccess({
+      title: 'Transfer submitted!',
+      subtitle: `Your payment of ₦${formattedAmount} has been received. Your wallet will update immediately.`,
+      amount: amtKobo,
+      bankName: VIRTUAL_ACCOUNT.bankName,
+      accountNumber: VIRTUAL_ACCOUNT.accountNumber,
+      accountName: VIRTUAL_ACCOUNT.accountName,
+      txRef: ref,
+      status: 'Successful',
+    });
   };
 
   const formatTime = (s: number) =>
@@ -143,7 +167,7 @@ function TopUpModal({
                 <Button label="Cancel" variant="ghost" onPress={handleClose} />
               </View>
             </>
-          ) : step === 2 ? (
+          ) : (
             <>
               <Text style={styles.sheetTitle}>Transfer ₦{Number(amount).toLocaleString()}</Text>
               <Text style={styles.sheetSub}>Make a bank transfer below. Funds appear automatically.</Text>
@@ -171,63 +195,6 @@ function TopUpModal({
                 <Button label="Cancel" variant="ghost" onPress={handleClose} />
               </View>
             </>
-          ) : (
-            <View style={styles.successContainer}>
-              <View style={styles.successIconBadge}>
-                <Svg width={32} height={32} viewBox="0 0 24 24" fill="none">
-                  <Path
-                    d="M5 13l4 4L19 7"
-                    stroke={Colors.ink}
-                    strokeWidth={2.8}
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </Svg>
-              </View>
-
-              <Text style={styles.successTitle}>Transfer submitted!</Text>
-              <Text style={styles.successSub}>
-                Your payment of ₦{Number(amount).toLocaleString()} has been received. Your wallet will update immediately.
-              </Text>
-
-              <View style={styles.successReceiptCard}>
-                <View style={styles.receiptRow}>
-                  <Text style={styles.receiptLabel}>Amount funded</Text>
-                  <Text style={styles.receiptAmount}>₦{Number(amount).toLocaleString()}</Text>
-                </View>
-                <View style={styles.receiptDivider} />
-                <View style={styles.receiptRow}>
-                  <Text style={styles.receiptLabel}>Bank</Text>
-                  <View style={styles.receiptBankRow}>
-                    <BankFavicon bankName={VIRTUAL_ACCOUNT.bankName} size={18} />
-                    <Text style={styles.receiptVal}>{VIRTUAL_ACCOUNT.bankName}</Text>
-                  </View>
-                </View>
-                <View style={styles.receiptRow}>
-                  <Text style={styles.receiptLabel}>Account</Text>
-                  <Text style={styles.receiptVal}>{VIRTUAL_ACCOUNT.accountNumber}</Text>
-                </View>
-                <View style={styles.receiptRow}>
-                  <Text style={styles.receiptLabel}>Beneficiary</Text>
-                  <Text style={styles.receiptVal}>{VIRTUAL_ACCOUNT.accountName}</Text>
-                </View>
-                <View style={styles.receiptRow}>
-                  <Text style={styles.receiptLabel}>Reference</Text>
-                  <Text style={[styles.receiptVal, styles.receiptMono]}>{txRef}</Text>
-                </View>
-                <View style={styles.receiptRow}>
-                  <Text style={styles.receiptLabel}>Status</Text>
-                  <View style={styles.statusSuccessPill}>
-                    <View style={styles.statusDot} />
-                    <Text style={styles.statusSuccessText}>Successful</Text>
-                  </View>
-                </View>
-              </View>
-
-              <View style={styles.sheetActions}>
-                <Button label="Back to Flex Wallet" onPress={handleClose} />
-              </View>
-            </View>
           )}
         </View>
       </KeyboardAvoidingView>
@@ -241,18 +208,28 @@ function WithdrawModal({
   onClose,
   onConfirm,
   currentBalance,
+  onSuccess,
 }: {
   visible: boolean;
   onClose: () => void;
   onConfirm: (amount: number) => void;
   currentBalance: number;
+  onSuccess: (data: {
+    title: string;
+    subtitle: string;
+    amount: number;
+    bankName: string;
+    accountNumber: string;
+    accountName: string;
+    txRef: string;
+    status: string;
+  }) => void;
 }) {
-  const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [step, setStep] = useState<1 | 2>(1);
   const [amount, setAmount] = useState('');
   const [error, setError] = useState('');
-  const [txRef, setTxRef] = useState('');
 
-  const handleClose = () => { setStep(1); setAmount(''); setError(''); setTxRef(''); onClose(); };
+  const handleClose = () => { setStep(1); setAmount(''); setError(''); onClose(); };
 
   const handleContinue = () => {
     const n = Number(amount.replace(/,/g, ''));
@@ -265,9 +242,19 @@ function WithdrawModal({
   const handleConfirm = () => {
     const n = Number(amount.replace(/,/g, ''));
     const ref = `PD-WD-${Math.floor(10000000 + Math.random() * 90000000)}`;
-    setTxRef(ref);
-    onConfirm(n * 100);
-    setStep(3);
+    const amtKobo = n * 100;
+    onConfirm(amtKobo);
+    handleClose();
+    onSuccess({
+      title: 'Withdrawal submitted!',
+      subtitle: `₦${Number(amount).toLocaleString()} is on its way to your ${PAYOUT_ACCOUNT.bankName} account.`,
+      amount: amtKobo,
+      bankName: PAYOUT_ACCOUNT.bankName,
+      accountNumber: PAYOUT_ACCOUNT.accountNumber,
+      accountName: PAYOUT_ACCOUNT.accountName,
+      txRef: ref,
+      status: 'Processing',
+    });
   };
 
   return (
@@ -295,7 +282,7 @@ function WithdrawModal({
                 <Button label="Cancel" variant="ghost" onPress={handleClose} />
               </View>
             </>
-          ) : step === 2 ? (
+          ) : (
             <>
               <Text style={styles.sheetTitle}>Confirm withdrawal</Text>
               <Text style={styles.sheetSub}>₦{Number(amount).toLocaleString()} will be sent to your payout account:</Text>
@@ -322,63 +309,6 @@ function WithdrawModal({
                 <Button label="Back" variant="ghost" onPress={() => setStep(1)} />
               </View>
             </>
-          ) : (
-            <View style={styles.successContainer}>
-              <View style={styles.successIconBadge}>
-                <Svg width={32} height={32} viewBox="0 0 24 24" fill="none">
-                  <Path
-                    d="M5 13l4 4L19 7"
-                    stroke={Colors.ink}
-                    strokeWidth={2.8}
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </Svg>
-              </View>
-
-              <Text style={styles.successTitle}>Withdrawal submitted!</Text>
-              <Text style={styles.successSub}>
-                ₦{Number(amount).toLocaleString()} is on its way to your {PAYOUT_ACCOUNT.bankName} account.
-              </Text>
-
-              <View style={styles.successReceiptCard}>
-                <View style={styles.receiptRow}>
-                  <Text style={styles.receiptLabel}>Amount withdrawn</Text>
-                  <Text style={styles.receiptAmount}>₦{Number(amount).toLocaleString()}</Text>
-                </View>
-                <View style={styles.receiptDivider} />
-                <View style={styles.receiptRow}>
-                  <Text style={styles.receiptLabel}>Payout bank</Text>
-                  <View style={styles.receiptBankRow}>
-                    <BankFavicon bankName={PAYOUT_ACCOUNT.bankName} size={18} />
-                    <Text style={styles.receiptVal}>{PAYOUT_ACCOUNT.bankName}</Text>
-                  </View>
-                </View>
-                <View style={styles.receiptRow}>
-                  <Text style={styles.receiptLabel}>Account</Text>
-                  <Text style={styles.receiptVal}>{PAYOUT_ACCOUNT.accountNumber}</Text>
-                </View>
-                <View style={styles.receiptRow}>
-                  <Text style={styles.receiptLabel}>Beneficiary</Text>
-                  <Text style={styles.receiptVal}>{PAYOUT_ACCOUNT.accountName}</Text>
-                </View>
-                <View style={styles.receiptRow}>
-                  <Text style={styles.receiptLabel}>Reference</Text>
-                  <Text style={[styles.receiptVal, styles.receiptMono]}>{txRef}</Text>
-                </View>
-                <View style={styles.receiptRow}>
-                  <Text style={styles.receiptLabel}>Status</Text>
-                  <View style={styles.statusSuccessPill}>
-                    <View style={styles.statusDot} />
-                    <Text style={styles.statusSuccessText}>Processing</Text>
-                  </View>
-                </View>
-              </View>
-
-              <View style={styles.sheetActions}>
-                <Button label="Back to Flex Wallet" onPress={handleClose} />
-              </View>
-            </View>
           )}
         </View>
       </KeyboardAvoidingView>
@@ -386,8 +316,44 @@ function WithdrawModal({
   );
 }
 
+function TxIcon({ type }: { type: LocalTransaction['type'] }) {
+  if (type === 'top_up' || type === 'refund') {
+    return (
+      <View style={[styles.txIconWrap, { backgroundColor: '#E6F8EE' }]}>
+        <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
+          <Rect x="3" y="3" width="14" height="18" rx="2" fill={Colors.green} stroke={Colors.ink} strokeWidth={1.8} />
+          <Path d="M7 8h8M7 12h5" stroke={Colors.white} strokeWidth={1.6} strokeLinecap="round" />
+          <Path d="M12 17l-2-2.5 1.5-1.5L12 14l2.5-3L16 12.5 12 17z" fill={Colors.white} />
+        </Svg>
+      </View>
+    );
+  }
+  if (type === 'withdrawal') {
+    return (
+      <View style={[styles.txIconWrap, { backgroundColor: '#F5F5F5' }]}>
+        <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
+          <Rect x="3" y="3" width="14" height="18" rx="2" fill={Colors.ink} stroke={Colors.ink} strokeWidth={1.8} />
+          <Path d="M7 8h8M7 12h5" stroke="rgba(255,255,255,0.6)" strokeWidth={1.6} strokeLinecap="round" />
+          <Path d="M12 19V14m0 0l-2 2m2-2l2 2" stroke={Colors.white} strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round" />
+        </Svg>
+      </View>
+    );
+  }
+  // payment
+  return (
+    <View style={[styles.txIconWrap, { backgroundColor: '#EDE8FF' }]}>
+      <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
+        <Rect x="3" y="2" width="14" height="18" rx="2" fill={Colors.violet} stroke={Colors.ink} strokeWidth={1.8} />
+        <Path d="M7 7h8M7 11h5" stroke={Colors.white} strokeWidth={1.6} strokeLinecap="round" />
+        <Path d="M10 16l2 2 3.5-4" stroke={Colors.green} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" />
+      </Svg>
+    </View>
+  );
+}
+
 // ── Main screen ────────────────────────────────────────────────────────────────
 export function WalletScreen() {
+  const navigation = useNavigation<NativeStackNavigationProp<MeStackParams>>();
   const [balance, setBalance] = useState(345000);
   const [transactions, setTransactions] = useState<LocalTransaction[]>(MOCK_TRANSACTIONS);
   const [directDebit, setDirectDebit] = useState(false);
@@ -466,7 +432,24 @@ export function WalletScreen() {
           {transactions.map((tx, i) => (
             <React.Fragment key={tx.id}>
               {i > 0 && <View style={styles.txDivider} />}
-              <View style={styles.txRow}>
+              <TouchableOpacity
+                style={styles.txRow}
+                activeOpacity={0.7}
+                onPress={() => {
+                  navigation.navigate('WalletReceipt', {
+                    title: tx.title ?? txTypeLabel[tx.type] ?? tx.type,
+                    amount: tx.amount,
+                    bankName: tx.type === 'withdrawal' ? PAYOUT_ACCOUNT.bankName : VIRTUAL_ACCOUNT.bankName,
+                    accountNumber: tx.type === 'withdrawal' ? PAYOUT_ACCOUNT.accountNumber : VIRTUAL_ACCOUNT.accountNumber,
+                    accountName: tx.type === 'withdrawal' ? PAYOUT_ACCOUNT.accountName : VIRTUAL_ACCOUNT.accountName,
+                    txRef: `PD-${tx.id.toUpperCase()}`,
+                    status: 'Successful',
+                    date: tx.createdAt,
+                    type: tx.type,
+                  });
+                }}
+              >
+                <TxIcon type={tx.type} />
                 <View style={styles.txInfo}>
                   <Text style={styles.txType}>{tx.title ?? txTypeLabel[tx.type] ?? tx.type}</Text>
                   <Text style={styles.txDate}>{formatFullDateTime(tx.createdAt)}</Text>
@@ -474,14 +457,35 @@ export function WalletScreen() {
                 <Text style={[styles.txAmount, tx.type === 'top_up' || tx.type === 'refund' ? styles.txPositive : styles.txNegative]}>
                   {txSign[tx.type]}{formatNaira(tx.amount)}
                 </Text>
-              </View>
+              </TouchableOpacity>
             </React.Fragment>
           ))}
         </View>
       </ScrollView>
 
-      <TopUpModal visible={showTopUp} onClose={() => setShowTopUp(false)} onConfirm={handleTopUp} />
-      <WithdrawModal visible={showWithdraw} onClose={() => setShowWithdraw(false)} onConfirm={handleWithdraw} currentBalance={balance} />
+      <TopUpModal
+        visible={showTopUp}
+        onClose={() => setShowTopUp(false)}
+        onConfirm={handleTopUp}
+        onSuccess={(data) => {
+          navigation.navigate('WalletReceipt', {
+            ...data,
+            type: 'top_up',
+          });
+        }}
+      />
+      <WithdrawModal
+        visible={showWithdraw}
+        onClose={() => setShowWithdraw(false)}
+        onConfirm={handleWithdraw}
+        currentBalance={balance}
+        onSuccess={(data) => {
+          navigation.navigate('WalletReceipt', {
+            ...data,
+            type: 'withdrawal',
+          });
+        }}
+      />
     </SafeAreaView>
   );
 }
@@ -499,7 +503,7 @@ const styles = StyleSheet.create({
   balance: { ...Typography.amountLarge, fontSize: 18, lineHeight: 22, color: Colors.white, marginBottom: 6 },
   balanceActions: { flexDirection: 'row', gap: 10 },
   balanceBtn: { flex: 1 },
-  balanceBtnText: { fontSize: 11, lineHeight: 15 },
+  balanceBtnText: { fontSize: 10, lineHeight: 14 },
 
   debitCard: {
     backgroundColor: Colors.white, borderRadius: Radius.card,
@@ -514,9 +518,10 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: Colors.line, padding: 16, gap: 12,
   },
   txTitle: { ...Typography.label, color: Colors.ink },
-  txRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 4 },
+  txRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 4 },
   txDivider: { height: 1, backgroundColor: Colors.line },
-  txInfo: { gap: 2 },
+  txIconWrap: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
+  txInfo: { flex: 1, gap: 2 },
   txType: { ...Typography.label, color: Colors.ink },
   txDate: { ...Typography.caption, color: Colors.textMuted },
   txAmount: { ...Typography.label },

@@ -62,6 +62,18 @@ export type MeStackParams = {
   Profile: undefined;
   PayoutAccount: undefined;
   Wallet: undefined;
+  WalletReceipt: {
+    title?: string;
+    subtitle?: string;
+    amount: number;
+    bankName: string;
+    accountNumber: string;
+    accountName: string;
+    txRef: string;
+    status?: string;
+    date?: string;
+    type?: 'top_up' | 'withdrawal' | 'payment' | 'refund';
+  };
   CoPartner: undefined;
   Properties: undefined;
   AddProperty: undefined;
