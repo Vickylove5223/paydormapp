@@ -18,6 +18,8 @@ import { formatNaira } from '@/utils/money';
 import { formatFullDateTime } from '@/utils/date';
 import { ScreenHeader } from '@/components/common/ScreenHeader';
 import { Button } from '@/components/common/Button';
+import { BankFavicon } from '@/components/common/BankFavicon';
+import Svg, { Path } from 'react-native-svg';
 
 interface LocalTransaction {
   id: string;
@@ -59,9 +61,10 @@ function TopUpModal({
   onClose: () => void;
   onConfirm: (amount: number) => void;
 }) {
-  const [step, setStep] = useState<1 | 2>(1);
+  const [step, setStep] = useState<1 | 2 | 3>(1);
   const [amount, setAmount] = useState('');
   const [seconds, setSeconds] = useState(TOPUP_DURATION);
+  const [txRef, setTxRef] = useState('');
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
@@ -79,7 +82,7 @@ function TopUpModal({
 
   const handleClose = () => {
     if (timerRef.current) clearInterval(timerRef.current);
-    setStep(1); setAmount(''); setSeconds(TOPUP_DURATION);
+    setStep(1); setAmount(''); setSeconds(TOPUP_DURATION); setTxRef('');
     onClose();
   };
 
@@ -91,8 +94,11 @@ function TopUpModal({
 
   const handleDone = () => {
     const n = Number(amount.replace(/,/g, ''));
+    if (timerRef.current) clearInterval(timerRef.current);
+    const ref = `PD-${Math.floor(10000000 + Math.random() * 90000000)}`;
+    setTxRef(ref);
     onConfirm(n * 100);
-    handleClose();
+    setStep(3);
   };
 
   const formatTime = (s: number) =>
@@ -137,13 +143,16 @@ function TopUpModal({
                 <Button label="Cancel" variant="ghost" onPress={handleClose} />
               </View>
             </>
-          ) : (
+          ) : step === 2 ? (
             <>
               <Text style={styles.sheetTitle}>Transfer ₦{Number(amount).toLocaleString()}</Text>
               <Text style={styles.sheetSub}>Make a bank transfer below. Funds appear automatically.</Text>
 
               <View style={styles.transferCard}>
-                <Text style={styles.transferBank}>{VIRTUAL_ACCOUNT.bankName}</Text>
+                <View style={styles.transferBankRow}>
+                  <BankFavicon bankName={VIRTUAL_ACCOUNT.bankName} size={28} />
+                  <Text style={styles.transferBank}>{VIRTUAL_ACCOUNT.bankName}</Text>
+                </View>
                 <Text style={styles.transferAccountNum}>{VIRTUAL_ACCOUNT.accountNumber}</Text>
                 <Text style={styles.transferName}>{VIRTUAL_ACCOUNT.accountName}</Text>
                 <View style={styles.transferAmountRow}>
@@ -162,6 +171,63 @@ function TopUpModal({
                 <Button label="Cancel" variant="ghost" onPress={handleClose} />
               </View>
             </>
+          ) : (
+            <View style={styles.successContainer}>
+              <View style={styles.successIconBadge}>
+                <Svg width={32} height={32} viewBox="0 0 24 24" fill="none">
+                  <Path
+                    d="M5 13l4 4L19 7"
+                    stroke={Colors.ink}
+                    strokeWidth={2.8}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </Svg>
+              </View>
+
+              <Text style={styles.successTitle}>Transfer submitted!</Text>
+              <Text style={styles.successSub}>
+                Your payment of ₦{Number(amount).toLocaleString()} has been received. Your wallet will update immediately.
+              </Text>
+
+              <View style={styles.successReceiptCard}>
+                <View style={styles.receiptRow}>
+                  <Text style={styles.receiptLabel}>Amount funded</Text>
+                  <Text style={styles.receiptAmount}>₦{Number(amount).toLocaleString()}</Text>
+                </View>
+                <View style={styles.receiptDivider} />
+                <View style={styles.receiptRow}>
+                  <Text style={styles.receiptLabel}>Bank</Text>
+                  <View style={styles.receiptBankRow}>
+                    <BankFavicon bankName={VIRTUAL_ACCOUNT.bankName} size={18} />
+                    <Text style={styles.receiptVal}>{VIRTUAL_ACCOUNT.bankName}</Text>
+                  </View>
+                </View>
+                <View style={styles.receiptRow}>
+                  <Text style={styles.receiptLabel}>Account</Text>
+                  <Text style={styles.receiptVal}>{VIRTUAL_ACCOUNT.accountNumber}</Text>
+                </View>
+                <View style={styles.receiptRow}>
+                  <Text style={styles.receiptLabel}>Beneficiary</Text>
+                  <Text style={styles.receiptVal}>{VIRTUAL_ACCOUNT.accountName}</Text>
+                </View>
+                <View style={styles.receiptRow}>
+                  <Text style={styles.receiptLabel}>Reference</Text>
+                  <Text style={[styles.receiptVal, styles.receiptMono]}>{txRef}</Text>
+                </View>
+                <View style={styles.receiptRow}>
+                  <Text style={styles.receiptLabel}>Status</Text>
+                  <View style={styles.statusSuccessPill}>
+                    <View style={styles.statusDot} />
+                    <Text style={styles.statusSuccessText}>Successful</Text>
+                  </View>
+                </View>
+              </View>
+
+              <View style={styles.sheetActions}>
+                <Button label="Back to Flex Wallet" onPress={handleClose} />
+              </View>
+            </View>
           )}
         </View>
       </KeyboardAvoidingView>
@@ -181,11 +247,12 @@ function WithdrawModal({
   onConfirm: (amount: number) => void;
   currentBalance: number;
 }) {
-  const [step, setStep] = useState<1 | 2>(1);
+  const [step, setStep] = useState<1 | 2 | 3>(1);
   const [amount, setAmount] = useState('');
   const [error, setError] = useState('');
+  const [txRef, setTxRef] = useState('');
 
-  const handleClose = () => { setStep(1); setAmount(''); setError(''); onClose(); };
+  const handleClose = () => { setStep(1); setAmount(''); setError(''); setTxRef(''); onClose(); };
 
   const handleContinue = () => {
     const n = Number(amount.replace(/,/g, ''));
@@ -197,8 +264,10 @@ function WithdrawModal({
 
   const handleConfirm = () => {
     const n = Number(amount.replace(/,/g, ''));
+    const ref = `PD-WD-${Math.floor(10000000 + Math.random() * 90000000)}`;
+    setTxRef(ref);
     onConfirm(n * 100);
-    handleClose();
+    setStep(3);
   };
 
   return (
@@ -226,13 +295,16 @@ function WithdrawModal({
                 <Button label="Cancel" variant="ghost" onPress={handleClose} />
               </View>
             </>
-          ) : (
+          ) : step === 2 ? (
             <>
               <Text style={styles.sheetTitle}>Confirm withdrawal</Text>
               <Text style={styles.sheetSub}>₦{Number(amount).toLocaleString()} will be sent to your payout account:</Text>
 
               <View style={styles.transferCard}>
-                <Text style={styles.transferBank}>{PAYOUT_ACCOUNT.bankName}</Text>
+                <View style={styles.transferBankRow}>
+                  <BankFavicon bankName={PAYOUT_ACCOUNT.bankName} size={28} />
+                  <Text style={styles.transferBank}>{PAYOUT_ACCOUNT.bankName}</Text>
+                </View>
                 <Text style={styles.transferAccountNum}>{PAYOUT_ACCOUNT.accountNumber}</Text>
                 <Text style={styles.transferName}>{PAYOUT_ACCOUNT.accountName}</Text>
                 <View style={styles.transferAmountRow}>
@@ -250,6 +322,63 @@ function WithdrawModal({
                 <Button label="Back" variant="ghost" onPress={() => setStep(1)} />
               </View>
             </>
+          ) : (
+            <View style={styles.successContainer}>
+              <View style={styles.successIconBadge}>
+                <Svg width={32} height={32} viewBox="0 0 24 24" fill="none">
+                  <Path
+                    d="M5 13l4 4L19 7"
+                    stroke={Colors.ink}
+                    strokeWidth={2.8}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </Svg>
+              </View>
+
+              <Text style={styles.successTitle}>Withdrawal submitted!</Text>
+              <Text style={styles.successSub}>
+                ₦{Number(amount).toLocaleString()} is on its way to your {PAYOUT_ACCOUNT.bankName} account.
+              </Text>
+
+              <View style={styles.successReceiptCard}>
+                <View style={styles.receiptRow}>
+                  <Text style={styles.receiptLabel}>Amount withdrawn</Text>
+                  <Text style={styles.receiptAmount}>₦{Number(amount).toLocaleString()}</Text>
+                </View>
+                <View style={styles.receiptDivider} />
+                <View style={styles.receiptRow}>
+                  <Text style={styles.receiptLabel}>Payout bank</Text>
+                  <View style={styles.receiptBankRow}>
+                    <BankFavicon bankName={PAYOUT_ACCOUNT.bankName} size={18} />
+                    <Text style={styles.receiptVal}>{PAYOUT_ACCOUNT.bankName}</Text>
+                  </View>
+                </View>
+                <View style={styles.receiptRow}>
+                  <Text style={styles.receiptLabel}>Account</Text>
+                  <Text style={styles.receiptVal}>{PAYOUT_ACCOUNT.accountNumber}</Text>
+                </View>
+                <View style={styles.receiptRow}>
+                  <Text style={styles.receiptLabel}>Beneficiary</Text>
+                  <Text style={styles.receiptVal}>{PAYOUT_ACCOUNT.accountName}</Text>
+                </View>
+                <View style={styles.receiptRow}>
+                  <Text style={styles.receiptLabel}>Reference</Text>
+                  <Text style={[styles.receiptVal, styles.receiptMono]}>{txRef}</Text>
+                </View>
+                <View style={styles.receiptRow}>
+                  <Text style={styles.receiptLabel}>Status</Text>
+                  <View style={styles.statusSuccessPill}>
+                    <View style={styles.statusDot} />
+                    <Text style={styles.statusSuccessText}>Processing</Text>
+                  </View>
+                </View>
+              </View>
+
+              <View style={styles.sheetActions}>
+                <Button label="Back to Flex Wallet" onPress={handleClose} />
+              </View>
+            </View>
           )}
         </View>
       </KeyboardAvoidingView>
@@ -428,7 +557,13 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.mint, borderRadius: Radius.card,
     borderWidth: 1.5, borderColor: Colors.ink, padding: 16, gap: 4,
   },
-  transferBank: { ...Typography.caption, color: Colors.textSecondary },
+  transferBankRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 4,
+  },
+  transferBank: { ...Typography.caption, color: Colors.ink, fontFamily: 'Syne_800ExtraBold', fontSize: 13 },
   transferAccountNum: { fontFamily: 'Syne_800ExtraBold', fontSize: 22, color: Colors.ink, letterSpacing: 1 },
   transferName: { ...Typography.caption, color: Colors.textSecondary },
   transferAmountRow: {
@@ -438,13 +573,125 @@ const styles = StyleSheet.create({
   transferAmountLabel: { ...Typography.caption, color: Colors.textSecondary },
   transferAmount: { ...Typography.label, color: Colors.ink },
 
-  // Timer
   timerRow: {
-    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    backgroundColor: Colors.screen, borderRadius: Radius.cardSm, padding: 12,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: Colors.screen,
+    borderRadius: Radius.cardSm,
+    padding: 12,
   },
-  timerLabel: { ...Typography.caption, color: Colors.textSecondary },
-  timer: { fontFamily: 'Syne_800ExtraBold', fontSize: 20, color: Colors.ink },
-  timerUrgent: { color: Colors.overdue },
-  payoutHint: { ...Typography.caption, color: Colors.textMuted, textAlign: 'center' },
+  timerLabel: {
+    ...Typography.caption,
+    color: Colors.textSecondary,
+  },
+  timer: {
+    fontFamily: 'Syne_800ExtraBold',
+    fontSize: 20,
+    color: Colors.ink,
+  },
+  timerUrgent: {
+    color: Colors.overdue,
+  },
+  payoutHint: {
+    ...Typography.caption,
+    color: Colors.textMuted,
+    textAlign: 'center',
+  },
+  
+  // Success page
+  successContainer: {
+    alignItems: 'center',
+    gap: 12,
+    paddingTop: 8,
+  },
+  successIconBadge: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: Colors.mint,
+    borderWidth: 2,
+    borderColor: Colors.ink,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 4,
+  },
+  successTitle: {
+    fontFamily: 'Syne_800ExtraBold',
+    fontSize: 22,
+    color: Colors.ink,
+    textAlign: 'center',
+  },
+  successSub: {
+    ...Typography.caption,
+    color: Colors.textSecondary,
+    textAlign: 'center',
+    paddingHorizontal: 12,
+    lineHeight: 18,
+    marginBottom: 4,
+  },
+  successReceiptCard: {
+    width: '100%',
+    backgroundColor: Colors.screen,
+    borderRadius: Radius.card,
+    borderWidth: 1.5,
+    borderColor: Colors.line,
+    padding: 16,
+    gap: 10,
+  },
+  receiptRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  receiptLabel: {
+    ...Typography.caption,
+    color: Colors.textSecondary,
+  },
+  receiptAmount: {
+    fontFamily: 'Syne_800ExtraBold',
+    fontSize: 18,
+    color: Colors.ink,
+  },
+  receiptDivider: {
+    height: 1,
+    backgroundColor: Colors.line,
+    marginVertical: 2,
+  },
+  receiptBankRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  receiptVal: {
+    ...Typography.label,
+    color: Colors.ink,
+    fontSize: 13,
+  },
+  receiptMono: {
+    fontFamily: 'Syne_800ExtraBold',
+    letterSpacing: 0.5,
+  },
+  statusSuccessPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#E6F8EE',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 99,
+    borderWidth: 1,
+    borderColor: '#40CE86',
+  },
+  statusDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#0D8C4B',
+  },
+  statusSuccessText: {
+    ...Typography.captionSmall,
+    color: '#0D8C4B',
+    fontFamily: 'DMSans_700Bold',
+  },
 });

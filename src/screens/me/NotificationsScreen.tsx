@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   RefreshControl,
 } from 'react-native';
+import Svg, { Path, Circle } from 'react-native-svg';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { Colors, Typography, Layout, Radius } from '@/theme';
@@ -96,15 +97,30 @@ export function NotificationsScreen() {
       onPress={() => {}}
       activeOpacity={0.8}
     >
-      <View style={styles.notifIcon}>
-        <Text style={styles.notifIconText}>{NOTIF_ICONS[item.type] ?? '📩'}</Text>
+      <View style={styles.notifIconWrapper}>
+        <View style={[styles.notifIcon, !item.readAt && styles.notifIconUnread]}>
+          <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
+            <Path
+              d="M18 10a6 6 0 0 0-12 0c0 3.5-2 5-2 5h16s-2-1.5-2-5z"
+              fill={Colors.violet} stroke={Colors.ink} strokeWidth={1.8} strokeLinejoin="round"
+            />
+            <Path
+              d="M12 21a2 2 0 0 0 2-2h-4a2 2 0 0 0 2 2z"
+              fill={Colors.green} stroke={Colors.ink} strokeWidth={1.5}
+            />
+          </Svg>
+        </View>
+        {!item.readAt && <View style={styles.unreadBadge} />}
       </View>
       <View style={styles.notifContent}>
         <Text style={styles.notifTitle}>{item.title}</Text>
         <Text style={styles.notifBody} numberOfLines={2}>{item.body}</Text>
-        <Text style={styles.notifTime}>{timeAgo(item.createdAt)}</Text>
+        <Text style={styles.notifTime}>
+          {new Date(item.createdAt).toLocaleDateString('en-NG', { day: 'numeric', month: 'short', year: 'numeric' })}
+          {' · '}
+          {new Date(item.createdAt).toLocaleTimeString('en-NG', { hour: '2-digit', minute: '2-digit', hour12: true })}
+        </Text>
       </View>
-      {!item.readAt && <View style={styles.unreadDot} />}
     </TouchableOpacity>
   );
 
@@ -124,7 +140,6 @@ export function NotificationsScreen() {
             )}
             {earlierNotifs.length > 0 && (
               <>
-                <Text style={styles.sectionLabel}>Earlier</Text>
                 {earlierNotifs.map(renderNotif)}
               </>
             )}
@@ -138,7 +153,7 @@ export function NotificationsScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.screen },
-  list: { padding: Layout.screenPadding, paddingBottom: Layout.contentBottomPadding },
+  list: { paddingHorizontal: Layout.screenPadding, paddingTop: 4, paddingBottom: Layout.contentBottomPadding },
   sectionLabel: {
     ...Typography.captionSmall, color: Colors.textMuted,
     fontFamily: 'Syne_800ExtraBold', textTransform: 'uppercase',
@@ -150,12 +165,19 @@ const styles = StyleSheet.create({
     padding: 14, marginBottom: 8, gap: 12,
     borderWidth: 1, borderColor: Colors.line,
   },
-  notifUnread: { borderColor: Colors.green, backgroundColor: Colors.mint },
+  notifUnread: {},
+  notifIconWrapper: { position: 'relative', flexShrink: 0 },
   notifIcon: {
     width: 38, height: 38, borderRadius: 10,
     backgroundColor: Colors.screen, alignItems: 'center', justifyContent: 'center',
   },
-  notifIconText: { fontSize: 20 },
+  notifIconUnread: { backgroundColor: '#EEF2FF' },
+  unreadBadge: {
+    position: 'absolute', top: -3, right: -3,
+    width: 10, height: 10, borderRadius: 5,
+    backgroundColor: '#EF4444',
+    borderWidth: 1.5, borderColor: Colors.white,
+  },
   notifContent: { flex: 1, gap: 2 },
   notifTitle: { ...Typography.label, color: Colors.ink },
   notifBody: { ...Typography.caption, color: Colors.textSecondary, lineHeight: 18 },

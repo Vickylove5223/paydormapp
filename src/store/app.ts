@@ -24,7 +24,7 @@ export const useAppStore = create<AppState>((set) => ({
   role: null,
   privateMode: true,
 
-  unreadCount: 0,
+  unreadCount: 3,
 
   setActiveContext: (propertyId, householdId, role) =>
     set({

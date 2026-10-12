@@ -16,7 +16,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Colors, Typography, Layout, Radius } from '@/theme';
+import { Colors, Typography, Layout, Radius, FontFamily } from '@/theme';
 import Svg, { Path, Rect, Circle, Ellipse } from 'react-native-svg';
 import { useAppStore } from '@/store/app';
 import { api } from '@/api/client';
@@ -51,12 +51,13 @@ interface CoPartner {
   share: number;
   shareMode: 'equal' | 'percent' | 'fixed';
   status: 'active' | 'invited';
+  onboardedAt?: string;
 }
 
 const MOCK_PARTNERS: CoPartner[] = [
-  { membershipId: 'cp1', userId: 'u1', name: 'Chisom Obi', share: 50, shareMode: 'percent', status: 'active' },
-  { membershipId: 'cp2', userId: 'u2', name: 'Tunde Fashola', share: 50, shareMode: 'percent', status: 'active' },
-  { membershipId: 'cp3', userId: 'u3', name: 'Ngozi Eze', share: 0, shareMode: 'equal', status: 'invited' },
+  { membershipId: 'cp1', userId: 'u1', name: 'Chisom Obi', share: 50, shareMode: 'percent', status: 'active', onboardedAt: '10 Oct 2026, 2:30 PM' },
+  { membershipId: 'cp2', userId: 'u2', name: 'Tunde Fashola', share: 50, shareMode: 'percent', status: 'active', onboardedAt: '8 Oct 2026, 11:15 AM' },
+  { membershipId: 'cp3', userId: 'u3', name: 'Ngozi Eze', share: 0, shareMode: 'equal', status: 'invited', onboardedAt: '11 Oct 2026, 9:45 AM' },
 ];
 
 // ── Invite Modal ──────────────────────────────────────────────────────────────
@@ -376,9 +377,9 @@ export function CoPartnerScreen() {
           </View>
         </View>
         <Text style={styles.partnerShare}>
-          {item.shareMode === 'equal' ? 'Equal share' :
-           item.shareMode === 'percent' ? `${item.share}% of bills` :
-           `₦${(item.share / 100).toFixed(0)} fixed`}
+          {item.status === 'invited'
+            ? `Invited: ${item.onboardedAt ?? '11 Oct 2026, 9:45 AM'}`
+            : `Onboarded: ${item.onboardedAt ?? '10 Oct 2026, 2:30 PM'}`}
         </Text>
       </View>
       <View style={styles.partnerRight}>
@@ -412,20 +413,35 @@ export function CoPartnerScreen() {
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
-      <ScreenHeader title="Co-partners" align="left" />
+      <ScreenHeader
+        title="Co-partners"
+        align="left"
+        rightAction={
+          canManage ? (
+            <TouchableOpacity
+              style={styles.headerInviteBtn}
+              onPress={() => setShowInvite(true)}
+              activeOpacity={0.7}
+            >
+              <Svg width={14} height={14} viewBox="0 0 24 24" fill="none">
+                <Path
+                  d="M12 5v14M5 12h14"
+                  stroke={Colors.ink}
+                  strokeWidth={2.4}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </Svg>
+              <Text style={styles.headerInviteText}>Invite</Text>
+            </TouchableOpacity>
+          ) : undefined
+        }
+      />
       <FlatList
         data={partners}
         renderItem={renderPartner}
         keyExtractor={(item) => item.membershipId}
         contentContainerStyle={styles.list}
-        ListHeaderComponent={
-          canManage ? (
-            <View style={styles.listHeader}>
-              <Button label="Invite" variant="accent" size="md" onPress={() => setShowInvite(true)} />
-              <Button label="Edit split" variant="outline" size="md" onPress={() => setShowEditSplit(true)} />
-            </View>
-          ) : null
-        }
       />
 
       <InviteModal visible={showInvite} onClose={() => setShowInvite(false)} onSend={handleInviteSend} />
@@ -442,7 +458,18 @@ export function CoPartnerScreen() {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.screen },
   list: { padding: Layout.screenPadding, paddingBottom: Layout.contentBottomPadding, gap: 12 },
-  listHeader: { flexDirection: 'row', gap: 10, marginBottom: 4 },
+  headerInviteBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingVertical: 4,
+    paddingHorizontal: 2,
+  },
+  headerInviteText: {
+    ...Typography.caption,
+    fontFamily: FontFamily.dmSansBold,
+    color: Colors.ink,
+  },
 
   partnerCard: {
     flexDirection: 'row', alignItems: 'center',

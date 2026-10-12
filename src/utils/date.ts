@@ -31,6 +31,18 @@ export function formatDueDate(iso: string): string {
   return `Due ${d.toLocaleDateString('en-NG', { day: 'numeric', month: 'short', year: 'numeric' })}`;
 }
 
+/** Return recurring day label: "Every 5th", "Every 22nd", etc. */
+export function formatRecurringDay(iso: string): string {
+  const day = new Date(iso).getDate();
+  const suffix =
+    day >= 11 && day <= 13 ? 'th'
+    : day % 10 === 1 ? 'st'
+    : day % 10 === 2 ? 'nd'
+    : day % 10 === 3 ? 'rd'
+    : 'th';
+  return `Every ${day}${suffix}`;
+}
+
 /** Return month/year label: "October 2026" */
 export function monthYearLabel(period: string): string {
   const [year, month] = period.split('-');

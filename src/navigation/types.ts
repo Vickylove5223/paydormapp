@@ -25,24 +25,35 @@ export type MainTabParams = {
 export type HomeStackParams = {
   HomeMain: undefined;
   Notifications: undefined;
-  BillDetail: { billId: string };
-  PaymentDetail: { paymentId: string };
+  BillDetail: { billId: string; billData?: any };
 };
 
 // ── Bills Stack ───────────────────────────────────────────────────────────────
 export type BillsStackParams = {
   BillsMain: undefined;
   AddBill: { billId?: string; isPrivate?: boolean; scope?: string } | undefined;
-  BillDetail: { billId: string };
-  PaymentDetail: { paymentId: string };
+  BillDetail: { billId: string; billData?: any };
 };
 
 // ── Levies Stack ──────────────────────────────────────────────────────────────
 export type LeviesStackParams = {
   LeviesMain: undefined;
-  AddBill: { billId?: string; isPrivate?: boolean; scope?: string } | undefined;
-  BillDetail: { billId: string };
-  PaymentDetail: { paymentId: string };
+  AddBill:
+    | {
+        billId?: string;
+        isPrivate?: boolean;
+        scope?: string;
+        title?: string;
+        totalAmount?: string;
+        dueDate?: string;
+        billType?: string;
+      }
+    | undefined;
+  BillDetail: { billId: string; billData?: any };
+  ChargesDetail: { billId: string; billData?: any };
+  TransactionHistory: { billId: string; billData?: any };
+  Receipt: { billData: any; txDate: string; txAmount: number; txMonth: string };
+  CoPartner: undefined;
 };
 
 // ── Me Stack ──────────────────────────────────────────────────────────────────

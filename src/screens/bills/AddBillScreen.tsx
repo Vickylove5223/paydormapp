@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Alert,
   Modal,
+  TextInput as RNTextInput,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path, Circle, Rect } from 'react-native-svg';
@@ -362,16 +363,38 @@ function ProviderSelectorModal({
 }
 
 export function AddBillScreen({ route }: Props) {
-  const { billId, isPrivate, scope: initialScope } = route.params ?? {};
+  const {
+    billId,
+    isPrivate,
+    scope: initialScope,
+    title: initialTitle,
+    totalAmount: initialAmount,
+    dueDate: initialDueDate,
+    billType: initialBillType,
+  } = (route.params ?? {}) as any;
   const navigation = useNavigation<any>();
   const queryClient = useQueryClient();
   const [scope, setScope] = useState<BillScope>(
     (initialScope as BillScope) ?? (isPrivate ? 'private' : 'shared')
   );
-  const [billType, setBillType] = useState<BillType>('electricity');
+  const [billType, setBillType] = useState<BillType>(initialBillType ?? 'electricity');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [showCalendarModal, setShowCalendarModal] = useState(false);
+
+  // Co-partner split preference
+  const [splitMode, setSplitMode] = useState<'equal' | 'percentage' | 'custom'>('equal');
+  const [splitApplyTo, setSplitApplyTo] = useState<Set<string>>(new Set(['shared', 'one_time']));
+  const [splitPctA, setSplitPctA] = useState('50');
+  const [splitPctB, setSplitPctB] = useState('50');
+
+  const toggleApplyTo = (key: string) => {
+    setSplitApplyTo(prev => {
+      const next = new Set(prev);
+      if (next.has(key)) { next.delete(key); } else { next.add(key); }
+      return next;
+    });
+  };
 
   // Payout destination state
   const [payoutMethod, setPayoutMethod] = useState<'bank_account' | 'paydorm_direct'>('paydorm_direct');
@@ -414,7 +437,12 @@ export function AddBillScreen({ route }: Props) {
 
   const { control, handleSubmit, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schema),
-    defaultValues: { lineItems: [] },
+    defaultValues: {
+      title: initialTitle ?? '',
+      totalAmount: initialAmount != null ? String(initialAmount) : '',
+      dueDate: initialDueDate ?? '',
+      lineItems: [],
+    },
   });
 
   const onSubmit = async (data: FormData) => {
@@ -492,7 +520,7 @@ export function AddBillScreen({ route }: Props) {
           render={({ field: { onChange, onBlur, value } }) => (
             <TextInput
               label="Bill title"
-              placeholder="e.g. July EKEDC bill"
+              placeholder="e.g. Electricity EKEDC"
               value={value}
               onChangeText={onChange}
               onBlur={onBlur}
@@ -754,6 +782,98 @@ export function AddBillScreen({ route }: Props) {
             </View>
           )}
         </View>
+
+        {/* Co-partner split preference */}
+        {scope === 'copartner' && (
+          <View style={styles.splitSection}>
+            <Text style={styles.label}>Split preference</Text>
+            <Text style={styles.splitHint}>Choose how this bill is split with your co-partner. You can change this anytime.</Text>
+
+            {/* Split mode options */}
+            <View style={styles.splitModeRow}>
+              {([
+                { key: 'equal', label: 'Equal', desc: 'Split 50/50 automatically' },
+                { key: 'percentage', label: 'Percentage', desc: 'Set a custom % each' },
+                { key: 'custom', label: 'Custom', desc: 'Fixed amount per bill' },
+              ] as const).map(opt => (
+                <TouchableOpacity
+                  key={opt.key}
+                  style={[styles.splitModeCard, splitMode === opt.key && styles.splitModeCardActive]}
+                  onPress={() => setSplitMode(opt.key)}
+                  activeOpacity={0.8}
+                >
+                  <View style={[styles.splitModeRadio, splitMode === opt.key && styles.splitModeRadioActive]}>
+                    {splitMode === opt.key && <View style={styles.splitModeRadioDot} />}
+                  </View>
+                  <Text style={[styles.splitModeLabel, splitMode === opt.key && styles.splitModeLabelActive]}>{opt.label}</Text>
+                  <Text style={styles.splitModeDesc}>{opt.desc}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            {/* Percentage inputs */}
+            {splitMode === 'percentage' && (
+              <View style={styles.splitPctRow}>
+                <View style={styles.splitPctField}>
+                  <Text style={styles.splitPctLabel}>You</Text>
+                  <View style={styles.splitPctInputWrap}>
+                    <RNTextInput
+                      style={styles.splitPctInput}
+                      value={splitPctA}
+                      onChangeText={v => { setSplitPctA(v); setSplitPctB(String(100 - (parseInt(v) || 0))); }}
+                      keyboardType="numeric"
+                      maxLength={3}
+                    />
+                    <Text style={styles.splitPctSign}>%</Text>
+                  </View>
+                </View>
+                <Text style={styles.splitPctDivider}>+</Text>
+                <View style={styles.splitPctField}>
+                  <Text style={styles.splitPctLabel}>Co-partner</Text>
+                  <View style={styles.splitPctInputWrap}>
+                    <RNTextInput
+                      style={styles.splitPctInput}
+                      value={splitPctB}
+                      onChangeText={v => { setSplitPctB(v); setSplitPctA(String(100 - (parseInt(v) || 0))); }}
+                      keyboardType="numeric"
+                      maxLength={3}
+                    />
+                    <Text style={styles.splitPctSign}>%</Text>
+                  </View>
+                </View>
+                <View style={styles.splitPctTotal}>
+                  <Text style={[styles.splitPctTotalText, (parseInt(splitPctA) || 0) + (parseInt(splitPctB) || 0) !== 100 && { color: '#E8724A' }]}>
+                    = {(parseInt(splitPctA) || 0) + (parseInt(splitPctB) || 0)}%
+                  </Text>
+                </View>
+              </View>
+            )}
+
+            {/* Apply to */}
+            <Text style={[styles.label, { marginTop: 12, marginBottom: 6 }]}>Apply this split to</Text>
+            <View style={styles.applyToRow}>
+              {([
+                { key: 'shared', label: 'Shared bills' },
+                { key: 'one_time', label: 'One-time' },
+                { key: 'private', label: 'Private (optional)' },
+              ]).map(opt => (
+                <TouchableOpacity
+                  key={opt.key}
+                  style={[styles.applyToChip, splitApplyTo.has(opt.key) && styles.applyToChipActive]}
+                  onPress={() => toggleApplyTo(opt.key)}
+                  activeOpacity={0.8}
+                >
+                  {splitApplyTo.has(opt.key) && (
+                    <Svg width={11} height={11} viewBox="0 0 24 24" fill="none">
+                      <Path d="M5 13l4 4L19 7" stroke={Colors.ink} strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />
+                    </Svg>
+                  )}
+                  <Text style={[styles.applyToChipText, splitApplyTo.has(opt.key) && styles.applyToChipTextActive]}>{opt.label}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        )}
 
         {error ? <Text style={styles.error}>{error}</Text> : null}
 
@@ -1138,4 +1258,49 @@ const styles = StyleSheet.create({
   bankChipText: { ...Typography.captionSmall, color: Colors.textSecondary },
   bankChipTextActive: { color: Colors.ink, fontFamily: 'Syne_800ExtraBold' },
   error: { ...Typography.caption, color: Colors.overdue, marginBottom: 8 },
+
+  // Co-partner split preference
+  splitSection: {
+    borderTopWidth: 1, borderTopColor: Colors.line,
+    paddingTop: 16, marginTop: 8, gap: 0,
+  },
+  splitHint: { ...Typography.captionSmall, color: Colors.textSecondary, marginBottom: 12, fontSize: 12 },
+  splitModeRow: { flexDirection: 'row', gap: 8, marginBottom: 4 },
+  splitModeCard: {
+    flex: 1, borderRadius: 12, borderWidth: 1.5, borderColor: Colors.line,
+    backgroundColor: Colors.white, padding: 10, gap: 4, alignItems: 'center',
+  },
+  splitModeCardActive: { borderColor: Colors.ink, backgroundColor: Colors.mint },
+  splitModeRadio: {
+    width: 16, height: 16, borderRadius: 8, borderWidth: 1.5, borderColor: Colors.line,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  splitModeRadioActive: { borderColor: Colors.ink },
+  splitModeRadioDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: Colors.ink },
+  splitModeLabel: { ...Typography.captionSmall, color: Colors.textSecondary, fontFamily: 'Syne_800ExtraBold', fontSize: 11, textAlign: 'center' },
+  splitModeLabelActive: { color: Colors.ink },
+  splitModeDesc: { ...Typography.captionSmall, color: Colors.textMuted, fontSize: 9, textAlign: 'center' },
+  splitPctRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 10, marginBottom: 4 },
+  splitPctField: { flex: 1, gap: 4 },
+  splitPctLabel: { ...Typography.captionSmall, color: Colors.textSecondary, fontSize: 11, fontFamily: 'DMSans_700Bold' },
+  splitPctInputWrap: {
+    flexDirection: 'row', alignItems: 'center',
+    borderWidth: 1.5, borderColor: Colors.line, borderRadius: 10,
+    paddingHorizontal: 10, paddingVertical: 8, backgroundColor: Colors.white,
+  },
+  splitPctInput: { flex: 1, fontSize: 16, fontFamily: 'Syne_800ExtraBold', color: Colors.ink },
+  splitPctSign: { fontSize: 14, color: Colors.textSecondary, fontFamily: 'Syne_800ExtraBold' },
+  splitPctDivider: { fontSize: 16, color: Colors.textMuted, fontFamily: 'Syne_800ExtraBold', paddingTop: 18 },
+  splitPctTotal: { paddingTop: 18, minWidth: 36 },
+  splitPctTotalText: { fontSize: 13, fontFamily: 'DMSans_700Bold', color: Colors.green },
+  applyToRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  applyToChip: {
+    flexDirection: 'row', alignItems: 'center', gap: 5,
+    paddingHorizontal: 12, paddingVertical: 7,
+    borderRadius: 99, borderWidth: 1.5, borderColor: Colors.line,
+    backgroundColor: Colors.white,
+  },
+  applyToChipActive: { borderColor: Colors.ink, backgroundColor: Colors.mint },
+  applyToChipText: { ...Typography.captionSmall, color: Colors.textSecondary, fontSize: 12 },
+  applyToChipTextActive: { color: Colors.ink, fontFamily: 'DMSans_700Bold' },
 });

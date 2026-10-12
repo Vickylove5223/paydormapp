@@ -15,6 +15,7 @@ import { Colors, Typography, Layout, Radius } from '@/theme';
 import { ScreenHeader } from '@/components/common/ScreenHeader';
 import { TextInput } from '@/components/common/TextInput';
 import { Button } from '@/components/common/Button';
+import { BankFavicon } from '@/components/common/BankFavicon';
 
 export interface PayoutAccountDetails {
   bankName: string;
@@ -159,11 +160,7 @@ export function PayoutAccountScreen() {
         {account && !isEditing ? (
           <View style={styles.card}>
             <View style={styles.cardHeader}>
-              <View style={styles.bankIconCircle}>
-                <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
-                  <Path d="M3 21h18M3 10h18M5 10v11M9 10v11M15 10v11M19 10v11M12 3l9 7H3l9-7z" stroke={Colors.ink} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" />
-                </Svg>
-              </View>
+              <BankFavicon bankName={account.bankName} size={38} />
               <View style={styles.statusBadge}>
                 <Text style={styles.statusBadgeText}>Verified</Text>
               </View>
@@ -279,9 +276,12 @@ export function PayoutAccountScreen() {
                     setBankPickerVisible(false);
                   }}
                 >
-                  <Text style={[styles.bankItemText, selectedBank === b.name && styles.bankItemTextActive]}>
-                    {b.name}
-                  </Text>
+                  <View style={styles.bankItemLeft}>
+                    <BankFavicon bankName={b.name} size={24} />
+                    <Text style={[styles.bankItemText, selectedBank === b.name && styles.bankItemTextActive]}>
+                      {b.name}
+                    </Text>
+                  </View>
                   {selectedBank === b.name && (
                     <Text style={styles.bankCheck}>✓</Text>
                   )}
@@ -543,9 +543,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 14,
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+    borderRadius: Radius.cardSm,
     borderBottomWidth: 1,
     borderBottomColor: Colors.line,
+  },
+  bankItemLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    flex: 1,
   },
   bankItemActive: {
     backgroundColor: 'rgba(64, 206, 134, 0.08)',

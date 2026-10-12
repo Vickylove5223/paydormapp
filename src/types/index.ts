@@ -21,6 +21,7 @@ export interface Property {
   id: string;
   name: string;
   address: string;
+  state?: string;
   city: string;
   type: PropertyType;
   verified: boolean;

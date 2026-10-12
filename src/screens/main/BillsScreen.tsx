@@ -253,17 +253,23 @@ interface SummaryCardProps {
 
 function SummaryCard({ title, total, paidCount, totalCount, bg, textColor, subColor, icon, iconBg, expanded, onToggle, onHeaderPress }: SummaryCardProps) {
   return (
-    <TouchableOpacity style={[styles.summaryCard, expanded && { backgroundColor: '#E6F8EE' }]} activeOpacity={0.85} onPress={onHeaderPress ?? onToggle}>
-      <View style={[styles.summaryIconWrap, { backgroundColor: iconBg }]}>{icon}</View>
-      <View style={styles.summaryInfo}>
-        <Text style={styles.summaryTitle}>{title}</Text>
-        <Text style={styles.summaryPaid}>{paidCount} of {totalCount} paid</Text>
-      </View>
-      <View style={styles.summaryRight}>
+    <View style={[styles.summaryCard, expanded && { backgroundColor: '#E6F8EE' }]}>
+      <TouchableOpacity
+        style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10 }}
+        activeOpacity={0.85}
+        onPress={onHeaderPress ?? onToggle}
+      >
+        <View style={[styles.summaryIconWrap, { backgroundColor: iconBg }]}>{icon}</View>
+        <View style={styles.summaryInfo}>
+          <Text style={styles.summaryTitle}>{title}</Text>
+          <Text style={styles.summaryPaid}>{paidCount} of {totalCount} paid</Text>
+        </View>
+      </TouchableOpacity>
+      <TouchableOpacity style={styles.summaryRight} activeOpacity={0.7} onPress={onToggle} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
         <Text style={styles.summaryTotal}>{formatNaira(total)}</Text>
         <Chevron open={expanded} />
-      </View>
-    </TouchableOpacity>
+      </TouchableOpacity>
+    </View>
   );
 }
 
@@ -435,7 +441,7 @@ export function BillsScreen() {
 
               {/* Shared compound card */}
               {shared.length > 0 && (
-                <View style={[styles.cardWrapper, !!expanded[sharedKey] && { backgroundColor: '#E6F8EE', borderColor: '#E6F8EE' }]}>
+                <View style={[styles.cardWrapper, !!expanded[sharedKey] && { backgroundColor: '#E6F8EE', borderColor: Colors.green }]}>
                   <SummaryCard
                     title="Shared Compound Bills"
                     total={sharedTotal}
@@ -448,6 +454,7 @@ export function BillsScreen() {
                     iconBg={Colors.screen}
                     expanded={!!expanded[sharedKey]}
                     onToggle={() => toggle(sharedKey)}
+                    onHeaderPress={() => navigation.navigate('BillDetail', { billId: 'shared-compound', billData: { category: 'shared' } })}
                   />
                   {expanded[sharedKey] && shared.map(item => (
                     <View key={item.id}>
@@ -460,7 +467,7 @@ export function BillsScreen() {
 
               {/* One-time bills — tenant view only */}
               {isTenant && oneTime.length > 0 && (
-                <View style={[styles.cardWrapper, !!expanded[oneTimeKey] && { backgroundColor: '#E6F8EE', borderColor: '#E6F8EE' }]}>
+                <View style={[styles.cardWrapper, !!expanded[oneTimeKey] && { backgroundColor: '#E6F8EE', borderColor: Colors.green }]}>
                   <SummaryCard
                     title="One-time Bills"
                     total={oneTimeTotal}
@@ -473,6 +480,7 @@ export function BillsScreen() {
                     iconBg={Colors.screen}
                     expanded={!!expanded[oneTimeKey]}
                     onToggle={() => toggle(oneTimeKey)}
+                    onHeaderPress={() => navigation.navigate('BillDetail', { billId: oneTime[0]?.id ?? 'ot1', billData: { category: 'one_time' } })}
                   />
                   {expanded[oneTimeKey] && oneTime.map(item => (
                     <View key={item.id}>
@@ -485,7 +493,7 @@ export function BillsScreen() {
 
               {/* Private bills — tenant view only */}
               {isTenant && priv.length > 0 && (
-                <View style={[styles.cardWrapper, !!expanded[privKey] && { backgroundColor: '#E6F8EE', borderColor: '#E6F8EE' }]}>
+                <View style={[styles.cardWrapper, !!expanded[privKey] && { backgroundColor: '#E6F8EE', borderColor: Colors.green }]}>
                   <SummaryCard
                     title="Private Bills"
                     total={privTotal}
@@ -498,6 +506,7 @@ export function BillsScreen() {
                     iconBg={Colors.screen}
                     expanded={!!expanded[privKey]}
                     onToggle={() => toggle(privKey)}
+                    onHeaderPress={() => navigation.navigate('BillDetail', { billId: 'private-all', billData: { category: 'private' } })}
                   />
                   {expanded[privKey] && priv.map(item => (
                     <View key={item.id}>
@@ -510,7 +519,7 @@ export function BillsScreen() {
 
               {/* Co-partners bills — tenant view only */}
               {isTenant && copartner.length > 0 && (
-                <View style={[styles.cardWrapper, !!expanded[copartnerKey] && { backgroundColor: '#E6F8EE', borderColor: '#E6F8EE' }]}>
+                <View style={[styles.cardWrapper, !!expanded[copartnerKey] && { backgroundColor: '#E6F8EE', borderColor: Colors.green }]}>
                   <SummaryCard
                     title="Co-partners Bills"
                     total={copartnerTotal}
@@ -523,6 +532,7 @@ export function BillsScreen() {
                     iconBg={Colors.screen}
                     expanded={!!expanded[copartnerKey]}
                     onToggle={() => toggle(copartnerKey)}
+                    onHeaderPress={() => navigation.navigate('BillDetail', { billId: copartner[0]?.id ?? 'cp0', billData: { category: 'copartner' } })}
                   />
                   {expanded[copartnerKey] && copartner.map(item => (
                     <View key={item.id}>
@@ -570,7 +580,7 @@ const styles = StyleSheet.create({
   calBtnActive: { backgroundColor: Colors.ink },
   calBtnLabel: { ...Typography.captionSmall, color: Colors.white, fontFamily: 'Syne_800ExtraBold' },
 
-  pickerCheck: { ...Typography.label, color: Colors.green },
+  pickerCheck: { ...Typography.label, color: Colors.green, fontFamily: 'DMSans_700Bold' },
 
   calendarDropdown: {
     position: 'absolute', top: 62, right: Layout.screenPadding,
@@ -585,7 +595,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   calYearBtn: { padding: 4 },
-  calYearText: { ...Typography.label, color: Colors.ink, fontFamily: 'Syne_800ExtraBold' },
+  calYearText: { ...Typography.label, color: Colors.ink, fontFamily: 'DMSans_700Bold' },
   calGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   calCell: {
     width: '30%', aspectRatio: 2,
@@ -603,7 +613,7 @@ const styles = StyleSheet.create({
     borderTopWidth: 1, borderTopColor: Colors.line,
     marginTop: 10, paddingTop: 10,
   },
-  calClearText: { ...Typography.captionSmall, color: Colors.textSecondary },
+  calClearText: { ...Typography.captionSmall, color: Colors.textSecondary, fontFamily: 'DMSans_700Bold' },
 
   list: { padding: Layout.screenPadding, paddingBottom: Layout.contentBottomPadding, gap: 0 },
 
